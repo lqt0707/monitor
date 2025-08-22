@@ -25,12 +25,17 @@
     "test:network": "node test-network-errors.js",
     "test:integration": "node test-integration.js",
     "test:admin": "node test-admin-only.js",
+    "prepare-release": "node prepare-release.js",
     "server:dev": "cd server && npm run start:dev",
     "admin:dev": "cd admin && npm run dev",
     "admin:build": "cd admin && npm run build",
     "sdk:taro:build": "cd sdk/taroWechatMini && npm run build",
     "sdk:web:build": "cd sdk/web && npm run build",
-    "postinstall": "npm run deps:install"
+    "postinstall": "npm run deps:install",
+    "precommit": "./pre-commit.sh",
+    "commit": "git add . && npm run precommit && git commit",
+    "push": "git push origin main",
+    "release": "npm run build && npm run test && git tag -a v$(node -p \"require('./package.json').version\") -m \"Release version $(node -p \"require('./package.json').version\")\" && git push --tags"
   },
   "workspaces": [
     "server",

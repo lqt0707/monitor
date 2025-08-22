@@ -68,7 +68,7 @@ function createMonitor(options: any) {
 function createMonitor(options: MonitorOptions): Monitor {
   // 初始化配置
   const config = mergeConfig(defaultOptions, options);
-  
+
   // 创建监控实例
   return new Monitor(config);
 }
@@ -76,9 +76,9 @@ function createMonitor(options: MonitorOptions): Monitor {
 
 ### 数据交互规范
 
-- SDK开发需要严格遵循后端DTO定义的数据格式
-- 对于不同的API端点需要实现不同的数据转换逻辑
-- 单条数据上报时需要将复杂对象转换为JSON字符串
+- SDK 开发需要严格遵循后端 DTO 定义的数据格式
+- 对于不同的 API 端点需要实现不同的数据转换逻辑
+- 单条数据上报时需要将复杂对象转换为 JSON 字符串
 - 批量上报时需要保持对象格式并进行特定字段转换
 
 ## 🧪 测试规范
@@ -108,22 +108,22 @@ npm run test:integration # 集成测试
 
 ```javascript
 // 单元测试示例
-describe('Monitor', () => {
-  it('应该正确初始化监控实例', () => {
+describe("Monitor", () => {
+  it("应该正确初始化监控实例", () => {
     const monitor = createMonitor({
-      projectId: 'test',
-      serverUrl: 'http://localhost:3001'
+      projectId: "test",
+      serverUrl: "http://localhost:3001",
     });
-    
+
     expect(monitor).toBeDefined();
-    expect(monitor.projectId).toBe('test');
+    expect(monitor.projectId).toBe("test");
   });
 });
 
-// 网络错误测试示例  
-describe('网络错误上报', () => {
-  it('应该正确上报超时错误', async () => {
-    const result = await testNetworkErrorType('timeout');
+// 网络错误测试示例
+describe("网络错误上报", () => {
+  it("应该正确上报超时错误", async () => {
+    const result = await testNetworkErrorType("timeout");
     expect(result.success).toBe(true);
   });
 });
@@ -136,7 +136,7 @@ describe('网络错误上报', () => {
 ```
 monitor/
 ├── server/src/modules/     # 后端新模块
-├── admin/src/pages/        # 前端新页面  
+├── admin/src/pages/        # 前端新页面
 ├── admin/src/components/   # 前端新组件
 ├── sdk/web/src/           # Web SDK功能
 ├── sdk/taroWechatMini/src/ # 小程序SDK功能
@@ -182,7 +182,7 @@ npm run build
 # 功能添加
 git commit -m "feat: 添加网络错误监控功能"
 
-# 问题修复  
+# 问题修复
 git commit -m "fix: 修复数据上报格式错误"
 
 # 文档更新
@@ -199,7 +199,7 @@ git commit -m "refactor: 重构数据转换逻辑"
 
 1. 推送分支到 GitHub
 2. 创建 Pull Request
-3. 填写详细的PR描述
+3. 填写详细的 PR 描述
 4. 等待代码审查
 
 ## 🐛 问题报告
@@ -208,26 +208,32 @@ git commit -m "refactor: 重构数据转换逻辑"
 
 ```markdown
 ## 问题描述
+
 简要描述遇到的问题
 
 ## 复现步骤
-1. 执行步骤1
-2. 执行步骤2
+
+1. 执行步骤 1
+2. 执行步骤 2
 3. 看到错误
 
 ## 期望行为
+
 描述期望的正确行为
 
 ## 实际行为
+
 描述实际发生的错误行为
 
 ## 环境信息
+
 - OS: [e.g. macOS 12.0]
 - Node.js: [e.g. 16.14.0]
 - npm: [e.g. 8.3.1]
 - 浏览器: [e.g. Chrome 98.0]
 
 ## 附加信息
+
 任何其他有用的信息、截图、日志等
 ```
 
@@ -235,18 +241,23 @@ git commit -m "refactor: 重构数据转换逻辑"
 
 ```markdown
 ## 功能描述
+
 简要描述建议的功能
 
 ## 使用场景
+
 描述在什么情况下需要此功能
 
 ## 解决方案
+
 描述您期望的解决方案
 
 ## 替代方案
+
 描述您考虑过的替代解决方案
 
 ## 附加上下文
+
 任何其他相关的上下文或截图
 ```
 
@@ -254,7 +265,7 @@ git commit -m "refactor: 重构数据转换逻辑"
 
 ### 文档类型
 
-- **API 文档**: 描述接口和SDK使用方法
+- **API 文档**: 描述接口和 SDK 使用方法
 - **开发指南**: 帮助开发者理解和扩展项目
 - **用户手册**: 帮助用户使用监控系统
 - **部署指南**: 生产环境部署说明
