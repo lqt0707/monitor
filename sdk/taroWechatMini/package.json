@@ -1,0 +1,76 @@
+{
+  "name": "@monitor/taro-wechat-mini-sdk",
+  "version": "1.0.2",
+  "description": "Taro微信小程序错误监控SDK - 支持错误追踪、性能监控、行为分析",
+  "type": "module",
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "npm run clean && rollup -c && npm run copy-assets",
+    "build:watch": "rollup -c --watch",
+    "clean": "rm -rf dist",
+    "copy-assets": "node scripts/copy-assets.js",
+    "prepublishOnly": "npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "npm run build:watch",
+    "publish:beta": "npm publish --tag beta",
+    "publish:latest": "npm publish"
+  },
+  "keywords": [
+    "taro",
+    "wechat",
+    "miniprogram",
+    "monitor",
+    "error-tracking",
+    "performance",
+    "behavior-analysis",
+    "sdk"
+  ],
+  "author": "Monitor Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/monitor-sdk.git",
+    "directory": "sdk/taroWechatMini"
+  },
+  "homepage": "https://github.com/your-org/monitor-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/your-org/monitor-sdk/issues"
+  },
+  "engines": {
+    "node": ">=12.0.0"
+  },
+  "peerDependencies": {
+    "@tarojs/components": "^3.0.0 || ^4.0.0",
+    "@tarojs/taro": "^3.0.0 || ^4.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tarojs/taro": {
+      "optional": true
+    },
+    "@tarojs/components": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
+    "@types/node": "^18.0.0",
+    "rollup": "^4.46.2",
+    "rollup-plugin-dts": "^6.2.1",
+    "tslib": "^2.8.1",
+    "typescript": "^4.9.0"
+  },
+  "dependencies": {
+    "deepmerge": "^4.3.1",
+    "events": "^3.3.0"
+  }
+}

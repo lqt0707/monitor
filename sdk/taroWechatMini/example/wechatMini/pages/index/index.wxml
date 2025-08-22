@@ -1,0 +1,59 @@
+<view class="container" catchtap="onElementTrack">
+  <view class="header">
+    <text class="title">监控SDK测试页面</text>
+    <text class="subtitle">测试各种监控功能</text>
+  </view>
+
+  <view class="test-section">
+    <view class="m-unit">
+      <view class="test-title">JavaScript错误测试</view>
+      <view class="test-desc">测试JS错误捕获功能</view>
+      <view>
+        <button bindtap="onJsError" type="primary" size="mini">触发JS错误</button>
+      </view>
+    </view>
+
+    <view class="m-unit">
+      <view class="test-title">Promise错误测试</view>
+      <view class="test-desc">测试Promise拒绝捕获</view>
+      <view>
+        <button bindtap="onPromiseError" type="primary" size="mini">触发Promise错误</button>
+      </view>
+    </view>
+
+    <view class="m-unit">
+      <view class="test-title">HTTP错误测试</view>
+      <view class="test-desc">测试网络请求错误捕获</view>
+      <view>
+        <button bindtap="onHttpError" type="primary" size="mini">触发HTTP错误</button>
+      </view>
+    </view>
+
+    <view class="m-unit">
+      <view class="test-title">慢请求测试</view>
+      <view class="test-desc">● httpTimeout设置为10ms</view>
+      <view>
+        <button bindtap="onTestSlowHttpRequest" type="primary" size="mini">触发慢请求</button>
+      </view>
+    </view>
+  </view>
+
+  <view class="results-section">
+    <view class="results-header">
+      <text class="results-title">测试结果</text>
+      <button bindtap="onClearResults" type="default" size="mini">清空结果</button>
+    </view>
+    
+    <view class="results-list">
+      <view wx:for="{{testResults}}" wx:key="index" class="result-item">
+        <view class="result-time">{{item.time}}</view>
+        <view class="result-test">{{item.test}}</view>
+        <view class="result-content">{{item.result}}</view>
+      </view>
+      
+      <view wx:if="{{testResults.length === 0}}" class="no-results">
+        <text>暂无测试结果，请点击上方按钮进行测试</text>
+      </view>
+    </view>
+  </view>
+</view>

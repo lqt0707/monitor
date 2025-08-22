@@ -1,0 +1,120 @@
+/**
+ * 应用全局样式
+ */
+
+/* 重置默认样式 */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  /* height: 100%; */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', 'Helvetica Neue', Helvetica, Arial, sans-serif, 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol';
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(0, 0, 0, 0.85);
+  background-color: #f0f2f5;
+}
+
+#root {
+  height: 100%;
+}
+
+/* 登录页面样式 */
+.login-container {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+}
+
+.login-header {
+  text-align: center;
+  padding: 40px 40px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  opacity: 0.9;
+  margin: 8px 0 0;
+}
+
+.login-form {
+  padding: 40px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .login-container {
+    padding: 10px;
+  }
+
+  .login-header {
+    padding: 30px 20px 15px;
+  }
+
+  .login-form {
+    padding: 30px 20px;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* 工具类 */
+.text-center {
+  text-align: center;
+}
+
+.mb-16 {
+  margin-bottom: 16px;
+}
+
+.mb-24 {
+  margin-bottom: 24px;
+}
+
+.full-width {
+  width: 100%;
+}

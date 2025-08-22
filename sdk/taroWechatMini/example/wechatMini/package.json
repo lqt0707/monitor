@@ -1,0 +1,16 @@
+{
+  "name": "example",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@monitor/taro-wechat-mini-sdk": "file:../../monitor-taro-wechat-mini-sdk-1.0.0.tgz",
+    "femonitor-wx": "1.0.0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

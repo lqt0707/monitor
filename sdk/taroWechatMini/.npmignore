@@ -1,0 +1,56 @@
+# 源代码文件
+src/
+
+# 构建脚本
+scripts/
+
+# 配置文件
+tsconfig.json
+.editorconfig
+.eslintrc*
+.prettierrc*
+stylelint.config.*
+commitlint.config.*
+
+# 开发依赖和工具
+node_modules/
+.husky/
+.vscode/
+.idea/
+
+# 示例项目
+example/
+
+# 文档和说明（保留README.md）
+TARO_MIGRATION_PLAN.md
+*.log
+
+# 测试文件
+*.test.ts
+*.test.js
+*.spec.ts
+*.spec.js
+__tests__/
+coverage/
+
+# 临时文件
+*.tmp
+*.temp
+.DS_Store
+Thumbs.db
+
+# 版本控制
+.git/
+.gitignore
+
+# 环境文件
+.env*
+
+# 缓存文件
+.cache/
+*.tsbuildinfo
+
+# 其他
+*.md~
+*.swp
+*.swo

@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web监控SDK - Vue集成示例</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      background: #f5f5f5;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    .vue-app {
+      background: #e8f5e8;
+      border: 2px solid #4caf50;
+      padding: 20px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+
+    button {
+      background: #42b883;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #369870;
+    }
+
+    .error {
+      background: #ff4444;
+    }
+
+    .error:hover {
+      background: #cc0000;
+    }
+
+    .status {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+    }
+
+    .log {
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 4px;
+      margin: 10px 0;
+      max-height: 200px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+
+    .form-group {
+      margin: 10px 0;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .todo-item {
+      background: white;
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .todo-item.completed {
+      text-decoration: line-through;
+      opacity: 0.6;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Web监控SDK - Vue集成示例</h1>
+
+  <div class="container">
+    <h2>SDK状态</h2>
+    <div id="status" class="status">正在初始化...</div>
+  </div>
+
+  <!-- Vue应用 -->
+  <div id="app" class="vue-app">
+    <h2>Vue Todo应用 ({{ todos.length }} 项任务)</h2>
+
+    <!-- 添加任务表单 -->
+    <div class="form-group">
+      <label>添加新任务:</label>
+      <input v-model="newTodo" @keyup.enter="addTodo" placeholder="输入任务内容...">
+      <button @click="addTodo">添加任务</button>
+    </div>
+
+    <!-- 任务列表 -->
+    <div v-if="todos.length > 0">
+      <h3>任务列表:</h3>
+      <div v-for="todo in todos" :key="todo.id" :class="['todo-item', { completed: todo.completed }]">
+        <span @click="toggleTodo(todo.id)">{{ todo.text }}</span>
+        <button @click="deleteTodo(todo.id)" class="error">删除</button>
+      </div>
+    </div>
+    <div v-else>
+      <p>暂无任务，添加一个开始吧！</p>
+    </div>
+
+    <!-- 过滤器 -->
+    <div class="form-group">
+      <label>过滤任务:</label>
+      <select v-model="filter" @change="onFilterChange">
+        <option value="all">全部</option>
+        <option value="active">未完成</option>
+        <option value="completed">已完成</option>
+      </select>
+    </div>
+
+    <!-- 错误测试按钮 -->
+    <div class="container">
+      <h3>Vue错误测试</h3>
+      <button @click="triggerVueError" class="error">触发Vue组件错误</button>
+      <button @click="triggerAsyncError" class="error">触发异步错误</button>
+      <button @click="triggerWatcherError" class="error">触发Watcher错误</button>
+      <button @click="triggerRenderError" class="error">触发渲染错误</button>
+    </div>
+
+    <!-- 性能测试 -->
+    <div class="container">
+      <h3>Vue性能测试</h3>
+      <button @click="performHeavyComputation">执行重计算</button>
+      <button @click="simulateApiCall">模拟API调用</button>
+      <button @click="triggerRerender">触发重渲染</button>
+    </div>
+
+    <!-- 用户行为跟踪 -->
+    <div class="container">
+      <h3>用户行为跟踪</h3>
+      <p>当前路由: {{ currentRoute }}</p>
+      <button @click="navigateToPage('home')">导航到首页</button>
+      <button @click="navigateToPage('about')">导航到关于页</button>
+      <button @click="trackCustomAction">跟踪自定义行为</button>
+    </div>
+  </div>
+
+  <div class="container">
+    <h2>控制台日志</h2>
+    <div id="logs" class="log"></div>
+    <button onclick="clearLogs()">清空日志</button>
+  </div>
+
+  <!-- 引入Vue 3 -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <!-- 引入SDK -->
+  <script src="../dist/index.umd.js"></script>
+
+  <script>
+    const { createApp } = Vue;
+    const monitor = window.MonitorSDK;
+
+    // 日志记录函数
+    function log(message, type = 'info') {
+      const timestamp = new Date().toLocaleTimeString();
+      const logElement = document.getElementById('logs');
+      const logEntry = document.createElement('div');
+      logEntry.style.color = type === 'error' ? 'red' : type === 'warn' ? 'orange' : 'black';
+      logEntry.textContent = `[${timestamp}] ${message}`;
+      logElement.appendChild(logEntry);
+      logElement.scrollTop = logElement.scrollHeight;
+      console[type](message);
+    }
+
+    function clearLogs() {
+      document.getElementById('logs').innerHTML = '';
+      log('日志已清空');
+    }
+
+    // 初始化SDK
+    monitor.init({
+      projectId: 'vue-demo-project',
+      serverUrl: 'http://localhost:3001/api/monitor',
+      enableErrorMonitor: true,
+      enablePerformanceMonitor: true,
+      enableBehaviorMonitor: true,
+      enableInDev: true,
+      sampleRate: 1,
+      maxErrors: 50,
+      reportInterval: 3000,
+      userId: 'vue-demo-user-123',
+      tags: {
+        framework: 'vue',
+        version: '3.0',
+        environment: 'demo'
+      }
+    });
+
+    // 创建Vue应用
+    const app = createApp({
+      data() {
+        return {
+          newTodo: '',
+          filter: 'all',
+          currentRoute: 'home',
+          todos: [
+            { id: 1, text: '学习Vue 3', completed: false },
+            { id: 2, text: '集成监控SDK', completed: true },
+            { id: 3, text: '测试错误监控', completed: false }
+          ]
+        }
+      },
+      computed: {
+        filteredTodos() {
+          switch (this.filter) {
+            case 'active':
+              return this.todos.filter(todo => !todo.completed);
+            case 'completed':
+              return this.todos.filter(todo => todo.completed);
+            default:
+              return this.todos;
+          }
+        }
+      },
+      methods: {
+        addTodo() {
+          if (this.newTodo.trim()) {
+            const todo = {
+              id: Date.now(),
+              text: this.newTodo.trim(),
+              completed: false
+            };
+            this.todos.push(todo);
+            this.newTodo = '';
+
+            // 跟踪用户行为
+            monitor.trackBehavior('todo_added', {
+              todoText: todo.text,
+              totalTodos: this.todos.length
+            });
+            log(`添加任务: ${todo.text}`);
+          }
+        },
+        toggleTodo(id) {
+          const todo = this.todos.find(t => t.id === id);
+          if (todo) {
+            todo.completed = !todo.completed;
+            monitor.trackBehavior('todo_toggled', {
+              todoId: id,
+              completed: todo.completed
+            });
+            log(`切换任务状态: ${todo.text} -> ${todo.completed ? '已完成' : '未完成'}`);
+          }
+        },
+        deleteTodo(id) {
+          const todoIndex = this.todos.findIndex(t => t.id === id);
+          if (todoIndex > -1) {
+            const todo = this.todos[todoIndex];
+            this.todos.splice(todoIndex, 1);
+            monitor.trackBehavior('todo_deleted', {
+              todoId: id,
+              todoText: todo.text
+            });
+            log(`删除任务: ${todo.text}`);
+          }
+        },
+        onFilterChange() {
+          monitor.trackBehavior('filter_changed', {
+            filter: this.filter
+          });
+          log(`过滤器改变: ${this.filter}`);
+        },
+
+        // 错误测试方法
+        triggerVueError() {
+          log('触发Vue组件错误', 'warn');
+          // 故意访问不存在的属性
+          this.$nextTick(() => {
+            throw new Error('Vue组件中的测试错误');
+          });
+        },
+        triggerAsyncError() {
+          log('触发异步错误', 'warn');
+          setTimeout(() => {
+            throw new Error('Vue组件中的异步错误');
+          }, 100);
+        },
+        triggerWatcherError() {
+          log('触发Watcher错误', 'warn');
+          // 触发一个会导致watcher错误的操作
+          this.todos = null; // 这会导致computed属性出错
+        },
+        triggerRenderError() {
+          log('触发渲染错误', 'warn');
+          // 临时修改数据导致渲染错误
+          const originalTodos = this.todos;
+          this.todos = 'invalid data';
+          setTimeout(() => {
+            this.todos = originalTodos;
+          }, 100);
+        },
+
+        // 性能测试方法
+        performHeavyComputation() {
+          log('执行重计算', 'warn');
+          const start = performance.now();
+
+          // 模拟重计算
+          let result = 0;
+          for (let i = 0; i < 1000000; i++) {
+            result += Math.random();
+          }
+
+          const duration = performance.now() - start;
+          log(`重计算完成，耗时: ${duration.toFixed(2)}ms`);
+
+          monitor.trackBehavior('heavy_computation', {
+            duration,
+            result: result.toFixed(2)
+          });
+        },
+        simulateApiCall() {
+          log('模拟API调用', 'warn');
+          const start = performance.now();
+
+          fetch('https://jsonplaceholder.typicode.com/posts/1')
+            .then(response => response.json())
+            .then(data => {
+              const duration = performance.now() - start;
+              log(`API调用成功，耗时: ${duration.toFixed(2)}ms`);
+              monitor.trackBehavior('api_call_success', {
+                duration,
+                dataSize: JSON.stringify(data).length
+              });
+            })
+            .catch(error => {
+              const duration = performance.now() - start;
+              log(`API调用失败: ${error.message}`, 'error');
+              monitor.captureError('API调用失败', {
+                error: error.message,
+                duration
+              });
+            });
+        },
+        triggerRerender() {
+          log('触发重渲染', 'warn');
+          const start = performance.now();
+
+          // 批量更新数据触发重渲染
+          for (let i = 0; i < 10; i++) {
+            setTimeout(() => {
+              this.todos.forEach(todo => {
+                todo.text = todo.text + '.';
+              });
+
+              if (i === 9) {
+                const duration = performance.now() - start;
+                log(`重渲染完成，耗时: ${duration.toFixed(2)}ms`);
+                monitor.trackBehavior('rerender_test', {
+                  duration,
+                  updates: 10
+                });
+              }
+            }, i * 10);
+          }
+        },
+
+        // 路由和行为跟踪
+        navigateToPage(page) {
+          this.currentRoute = page;
+          monitor.trackPageView({
+            title: `${page} 页面`,
+            url: `#/${page}`
+          });
+          log(`导航到: ${page}`);
+        },
+        trackCustomAction() {
+          monitor.trackBehavior('custom_vue_action', {
+            component: 'TodoApp',
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent,
+            todosCount: this.todos.length
+          });
+          log('跟踪自定义Vue行为');
+        }
+      },
+      mounted() {
+        log('Vue应用已挂载');
+        monitor.trackPageView({
+          title: 'Vue Todo应用',
+          url: location.href
+        });
+
+        // 更新SDK状态显示
+        this.updateStatus();
+      },
+      errorCaptured(err, vm, info) {
+        // Vue错误边界
+        log(`Vue错误边界捕获: ${err.message}`, 'error');
+        monitor.captureError('Vue组件错误', {
+          error: err.message,
+          stack: err.stack,
+          componentInfo: info,
+          component: vm.$options.name || 'Unknown'
+        });
+        return false;
+      },
+      methods: {
+        ...this.methods,
+        updateStatus() {
+          const status = monitor.getStatus();
+          const statusElement = document.getElementById('status');
+          statusElement.innerHTML = `
+            <strong>Vue应用状态:</strong> 已挂载<br>
+            <strong>SDK初始化:</strong> ${status.isInitialized ? '已初始化' : '未初始化'}<br>
+            <strong>会话ID:</strong> ${status.sessionId}<br>
+            <strong>错误数量:</strong> ${status.errorCount}<br>
+            <strong>性能数据:</strong> ${status.performanceCount}<br>
+            <strong>行为数据:</strong> ${status.behaviorCount}
+          `;
+        }
+      }
+    });
+
+    // 全局错误处理
+    app.config.errorHandler = (err, vm, info) => {
+      log(`Vue全局错误处理: ${err.message}`, 'error');
+      monitor.captureError('Vue全局错误', {
+        error: err.message,
+        stack: err.stack,
+        info,
+        component: vm?.$options?.name || 'Unknown'
+      });
+    };
+
+    // 挂载应用
+    app.mount('#app');
+
+    // 监听SDK事件
+    window.addEventListener('monitor:error', (event) => {
+      log('SDK捕获错误: ' + event.detail.message, 'error');
+    });
+
+    window.addEventListener('monitor:performance', (event) => {
+      log('SDK性能数据: ' + event.detail.type, 'info');
+    });
+
+    window.addEventListener('monitor:behavior', (event) => {
+      log('SDK行为数据: ' + event.detail.event, 'info');
+    });
+
+    // 页面卸载时清理
+    window.addEventListener('beforeunload', () => {
+      monitor.flush();
+      log('页面卸载，数据已上报');
+    });
+
+    log('Vue集成示例已加载');
+  </script>
+</body>
+
+</html>

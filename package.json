@@ -1,0 +1,79 @@
+{
+  "name": "monitor-system",
+  "version": "1.0.0",
+  "description": "前端监控系统 - 包含服务端、管理后台和多平台SDK",
+  "private": true,
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "scripts": {
+    "start": "node start.js",
+    "dev": "node start.js dev",
+    "dev:simple": "node start-dev-env.js",
+    "dev:bash": "./start-dev-env.sh",
+    "server": "node start.js server",
+    "admin": "node start.js admin",
+    "build": "node start.js build",
+    "test": "node start.js test",
+    "deps:install": "node package-manager.js install",
+    "deps:update": "node package-manager.js update",
+    "deps:clean": "node package-manager.js clean",
+    "deps:build": "node package-manager.js build",
+    "deps:status": "node package-manager.js status",
+    "test:format": "node test-data-format.js",
+    "test:network": "node test-network-errors.js",
+    "test:integration": "node test-integration.js",
+    "test:admin": "node test-admin-only.js",
+    "server:dev": "cd server && npm run start:dev",
+    "admin:dev": "cd admin && npm run dev",
+    "admin:build": "cd admin && npm run build",
+    "sdk:taro:build": "cd sdk/taroWechatMini && npm run build",
+    "sdk:web:build": "cd sdk/web && npm run build",
+    "postinstall": "npm run deps:install"
+  },
+  "workspaces": [
+    "server",
+    "admin",
+    "sdk/taroWechatMini",
+    "sdk/web",
+    "example"
+  ],
+  "keywords": [
+    "monitor",
+    "frontend-monitoring",
+    "error-tracking",
+    "performance-monitoring",
+    "taro",
+    "wechat-mini-program",
+    "web-sdk"
+  ],
+  "author": "Monitor Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/monitor-system.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/monitor-system/issues"
+  },
+  "homepage": "https://github.com/your-org/monitor-system#readme",
+  "devDependencies": {},
+  "directories": {
+    "server": "server",
+    "admin": "admin",
+    "sdk": "sdk",
+    "example": "example",
+    "docs": "docs"
+  },
+  "config": {
+    "server": {
+      "port": 3001,
+      "host": "localhost"
+    },
+    "admin": {
+      "port": 5173,
+      "host": "localhost"
+    }
+  }
+}

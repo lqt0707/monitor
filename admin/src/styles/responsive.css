@@ -1,0 +1,458 @@
+/**
+ * 响应式设计样式
+ * 提供统一的响应式布局和组件样式
+ */
+
+/* 响应式断点 */
+:root {
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 576px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 992px;
+  --breakpoint-xl: 1200px;
+  --breakpoint-xxl: 1600px;
+
+  /* 间距变量 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-xxl: 48px;
+
+  /* 阴影变量 */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* 圆角变量 */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+}
+
+/* 全局响应式容器 */
+.responsive-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .responsive-container {
+    padding: 0 var(--spacing-sm);
+  }
+}
+
+/* 响应式网格系统 */
+.responsive-grid {
+  display: grid;
+  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+}
+
+@media (max-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
+  }
+}
+
+/* 响应式卡片 */
+.responsive-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-lg);
+  transition: all 0.3s ease;
+}
+
+.responsive-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 768px) {
+  .responsive-card {
+    padding: var(--spacing-md);
+    border-radius: var(--radius-md);
+  }
+}
+
+/* 响应式表格 */
+.responsive-table {
+  width: 100%;
+  overflow-x: auto;
+}
+
+@media (max-width: 768px) {
+  .responsive-table .ant-table {
+    font-size: 12px;
+  }
+
+  .responsive-table .ant-table-thead>tr>th,
+  .responsive-table .ant-table-tbody>tr>td {
+    padding: 8px 4px;
+  }
+}
+
+/* 响应式按钮组 */
+.responsive-button-group {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .responsive-button-group {
+    flex-direction: column;
+  }
+
+  .responsive-button-group .ant-btn {
+    width: 100%;
+  }
+}
+
+/* 响应式统计卡片 */
+.responsive-stat-card {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: var(--radius-xl);
+  padding: var(--spacing-lg);
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+  transition: all 0.3s ease;
+}
+
+.responsive-stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+.responsive-stat-card .stat-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin-bottom: var(--spacing-sm);
+}
+
+.responsive-stat-card .stat-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+@media (max-width: 768px) {
+  .responsive-stat-card {
+    padding: var(--spacing-md);
+  }
+
+  .responsive-stat-card .stat-value {
+    font-size: 2rem;
+  }
+}
+
+/* 响应式图表容器 */
+.responsive-chart-container {
+  width: 100%;
+  height: 400px;
+  background: white;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-md);
+}
+
+@media (max-width: 768px) {
+  .responsive-chart-container {
+    height: 300px;
+    padding: var(--spacing-sm);
+  }
+}
+
+/* 响应式侧边栏 */
+.responsive-sidebar {
+  transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+  .responsive-sidebar {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    height: 100vh;
+    z-index: 1000;
+    background: white;
+    box-shadow: var(--shadow-xl);
+  }
+
+  .responsive-sidebar.open {
+    left: 0;
+  }
+}
+
+/* 响应式头部 */
+.responsive-header {
+  display: flex;
+  justify-content: space-between;
+  /* align-items: center; */
+  padding: var(--spacing-md) 0;
+  border-bottom: 1px solid #f0f0f0;
+  /* margin-bottom: var(--spacing-lg); */
+}
+
+@media (max-width: 768px) {
+  .responsive-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+
+  .responsive-header .ant-typography {
+    margin: 0;
+  }
+}
+
+/* 响应式表单 */
+.responsive-form {
+  max-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .responsive-form .ant-col {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* 响应式模态框 */
+@media (max-width: 768px) {
+  .ant-modal {
+    max-width: calc(100vw - 32px);
+    margin: 16px;
+  }
+
+  .ant-modal-content {
+    border-radius: var(--radius-lg);
+  }
+}
+
+/* 响应式抽屉 */
+@media (max-width: 768px) {
+  .ant-drawer-content-wrapper {
+    width: 90vw !important;
+  }
+}
+
+/* 响应式标签页 */
+@media (max-width: 768px) {
+  .ant-tabs-nav {
+    margin: 0;
+  }
+
+  .ant-tabs-tab {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+}
+
+/* 响应式分页 */
+@media (max-width: 768px) {
+  .ant-pagination {
+    text-align: center;
+  }
+
+  .ant-pagination-options {
+    display: none;
+  }
+}
+
+/* 响应式面包屑 */
+@media (max-width: 768px) {
+  .ant-breadcrumb {
+    font-size: 12px;
+  }
+
+  .ant-breadcrumb-separator {
+    margin: 0 4px;
+  }
+}
+
+/* 响应式步骤条 */
+@media (max-width: 768px) {
+  .ant-steps-horizontal.ant-steps-label-horizontal {
+    display: block;
+  }
+
+  .ant-steps-item {
+    margin-bottom: var(--spacing-md);
+  }
+}
+
+/* 响应式时间轴 */
+@media (max-width: 768px) {
+  .ant-timeline-item-content {
+    margin-left: 20px;
+  }
+}
+
+/* 响应式统计数值 */
+@media (max-width: 768px) {
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+
+  .ant-statistic-title {
+    font-size: 12px;
+  }
+}
+
+/* 响应式警告框 */
+@media (max-width: 768px) {
+  .ant-alert {
+    padding: var(--spacing-sm);
+  }
+
+  .ant-alert-message {
+    font-size: 14px;
+  }
+}
+
+/* 响应式工具提示 */
+@media (max-width: 768px) {
+  .ant-tooltip {
+    max-width: 200px;
+  }
+}
+
+/* 响应式加载状态 */
+.responsive-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}
+
+/* 响应式空状态 */
+.responsive-empty {
+  text-align: center;
+  padding: var(--spacing-xxl) var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .responsive-empty {
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+}
+
+/* 响应式滚动条 */
+.responsive-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.responsive-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.responsive-scrollbar::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.responsive-scrollbar::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.responsive-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* 响应式动画 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 响应式打印样式 */
+@media print {
+  .responsive-no-print {
+    display: none !important;
+  }
+
+  .responsive-print-only {
+    display: block !important;
+  }
+
+  .responsive-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+}
+
+/* 高对比度模式支持 */
+@media (prefers-contrast: high) {
+  .responsive-card {
+    border: 2px solid #000;
+  }
+
+  .responsive-stat-card {
+    background: #000;
+    color: #fff;
+    border: 2px solid #fff;
+  }
+}
+
+/* 深色模式支持 */
+@media (prefers-color-scheme: dark) {
+  .responsive-card {
+    background: #1f1f1f;
+    color: #fff;
+    border: 1px solid #333;
+  }
+
+  .responsive-chart-container {
+    background: #1f1f1f;
+    color: #fff;
+  }
+}
+
+/* 响应式工具类 */
+.hide-mobile {
+  display: block;
+}
+
+.show-mobile {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none;
+  }
+
+  .show-mobile {
+    display: block;
+  }
+}
+
+.text-responsive {
+  font-size: clamp(14px, 2.5vw, 18px);
+}
+
+.heading-responsive {
+  font-size: clamp(20px, 4vw, 32px);
+}
+
+.padding-responsive {
+  padding: clamp(8px, 2vw, 24px);
+}
+
+.margin-responsive {
+  margin: clamp(8px, 2vw, 24px);
+}
