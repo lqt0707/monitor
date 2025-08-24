@@ -1,0 +1,143 @@
+{
+  "name": "@monitor/sdk",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Monitor SDK - 多平台前端监控SDK解决方案，支持自动环境检测，Web、Taro小程序一站式监控方案",
+  "keywords": [
+    "monitor",
+    "frontend",
+    "error-tracking",
+    "performance",
+    "analytics",
+    "web",
+    "taro",
+    "miniprogram"
+  ],
+  "author": "Monitor Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/monitor.git",
+    "directory": "sdk"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "web-core/dist",
+    "taro-core/dist",
+    "core/dist",
+    "adapters",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    },
+    "./web": {
+      "types": "./web-core/dist/index.d.ts",
+      "import": "./web-core/dist/index.esm.js",
+      "require": "./web-core/dist/index.js"
+    },
+    "./taro": {
+      "types": "./taro-core/dist/index.d.ts",
+      "import": "./taro-core/dist/index.esm.js",
+      "require": "./taro-core/dist/index.js"
+    },
+    "./core": {
+      "types": "./core/dist/index.d.ts",
+      "import": "./core/dist/index.esm.js",
+      "require": "./core/dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "clean": "rimraf dist web-core/dist taro-core/dist core/dist",
+    "build": "npm run clean && npm run build:core && npm run build:web && npm run build:taro && npm run build:main",
+    "build:core": "npm run build:core:types && npm run build:core:bundle",
+    "build:core:types": "tsc --project core/tsconfig.json",
+    "build:core:bundle": "rollup -c rollup.config.core.js",
+    "build:web": "npm run build:web:types && npm run build:web:bundle",
+    "build:web:types": "tsc --project web-core/tsconfig.json",
+    "build:web:bundle": "rollup -c rollup.config.web.js",
+    "build:taro": "npm run build:taro:types && npm run build:taro:bundle",
+    "build:taro:types": "tsc --project taro-core/tsconfig.json",
+    "build:taro:bundle": "rollup -c rollup.config.taro.js",
+    "build:main": "rollup -c rollup.config.main.js",
+    "dev": "npm run build -- --watch",
+    "dev:web": "rollup -c rollup.config.web.js --watch",
+    "dev:taro": "rollup -c rollup.config.taro.js --watch",
+    "dev:core": "rollup -c rollup.config.core.js --watch",
+    "test": "npm run test:types && npm run test:build",
+    "test:types": "npm run build:core:types && npm run build:web:types && npm run build:taro:types",
+    "test:build": "npm run build",
+    "lint": "eslint **/*.ts --fix",
+    "format": "prettier --write **/*.{ts,js,json,md}",
+    "size": "npm run build && bundlesize",
+    "analyze": "npm run build && npm run analyze:web && npm run analyze:taro",
+    "analyze:web": "rollup-plugin-visualizer web-core/dist/stats.html",
+    "analyze:taro": "rollup-plugin-visualizer taro-core/dist/stats.html",
+    "prepublishOnly": "npm run build && npm run test",
+    "publish:all": "npm run publish:main && npm run publish:web && npm run publish:taro && npm run publish:core",
+    "publish:main": "npm publish",
+    "publish:web": "cd web-core && npm publish",
+    "publish:taro": "cd taro-core && npm publish",
+    "publish:core": "cd core && npm publish",
+    "version:all": "npm run version:main && npm run version:web && npm run version:taro && npm run version:core",
+    "version:main": "npm version",
+    "version:web": "cd web-core && npm version",
+    "version:taro": "cd taro-core && npm version",
+    "help": "node -e \"console.log('\\n📚 查看快速开始指南：\\n  cat ./QUICK_START.md\\n\\n📦 推荐包选择：\\n  Web项目：npm install @monitor/web-sdk\\n  Taro项目：npm install @monitor/taro-sdk\\n')\""
+  },
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^15.2.3",
+    "@rollup/plugin-replace": "^5.0.5",
+    "@rollup/plugin-terser": "^0.4.4",
+    "@rollup/plugin-typescript": "^11.1.6",
+    "@types/node": "^20.11.17",
+    "bundlesize": "^0.18.1",
+    "eslint": "^8.56.0",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "prettier": "^3.2.5",
+    "rimraf": "^5.0.5",
+    "rollup": "^4.12.0",
+    "rollup-plugin-dts": "^6.1.0",
+    "rollup-plugin-visualizer": "^5.12.0",
+    "tslib": "^2.6.2",
+    "typescript": "^5.3.3"
+  },
+  "peerDependencies": {
+    "@tarojs/taro": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tarojs/taro": {
+      "optional": true
+    }
+  },
+  "bundlesize": [
+    {
+      "path": "./web-core/dist/index.min.js",
+      "maxSize": "15kb",
+      "compression": "gzip"
+    },
+    {
+      "path": "./taro-core/dist/index.min.js",
+      "maxSize": "12kb",
+      "compression": "gzip"
+    }
+  ],
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  }
+}

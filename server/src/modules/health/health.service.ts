@@ -1,77 +1,248 @@
-import { Injectable } from '@nestjs/common';
-import { InjectConnection } from '@nestjs/typeorm';
-import { Connection } from 'typeorm';
-import { ClickHouseService } from '../clickhouse/services/clickhouse.service';
+import { Injectable, Logger } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { MonitorData } from '../monitor/entities/monitor-data.entity';
+
+export interface HealthCheckResult {
+  status: 'healthy' | 'degraded' | 'unhealthy';
+  timestamp: number;
+  uptime: number;
+  version: string;
+  services: {
+    database: {
+      status: 'healthy' | 'unhealthy';
+      responseTime?: number;
+      error?: string;
+    };
+    redis?: {
+      status: 'healthy' | 'unhealthy';
+      responseTime?: number;
+      error?: string;
+    };
+    clickhouse?: {
+      status: 'healthy' | 'unhealthy';
+      responseTime?: number;
+      error?: string;
+    };
+    queue?: {
+      status: 'healthy' | 'unhealthy';
+      error?: string;
+    };
+  };
+  metrics: {
+    totalErrors: number;
+    errorRate: number;
+    avgResponseTime: number;
+  };
+}
 
 /**
  * 健康检查服务
  */
 @Injectable()
 export class HealthService {
+  private readonly logger = new Logger(HealthService.name);
+  private readonly startTime = Date.now();
+
   constructor(
-    @InjectConnection()
-    private readonly connection: Connection,
-    private readonly clickHouseService: ClickHouseService,
+    @InjectRepository(MonitorData)
+    private monitorDataRepository: Repository<MonitorData>,
   ) {}
 
   /**
-   * 检查服务健康状态
-   * @returns 健康状态信息
+   * 执行健康检查
+   * @returns 健康检查结果
    */
-  async checkHealth() {
-    const uptime = process.uptime();
-    const memoryUsage = process.memoryUsage();
-    
-    return {
-      status: 'ok',
-      timestamp: new Date().toISOString(),
-      uptime: `${Math.floor(uptime)}s`,
-      memory: {
-        rss: `${Math.round(memoryUsage.rss / 1024 / 1024)}MB`,
-        heapTotal: `${Math.round(memoryUsage.heapTotal / 1024 / 1024)}MB`,
-        heapUsed: `${Math.round(memoryUsage.heapUsed / 1024 / 1024)}MB`,
-        external: `${Math.round(memoryUsage.external / 1024 / 1024)}MB`,
-      },
-      version: process.version,
-      environment: process.env.NODE_ENV || 'development',
-    };
+  async checkHealth(): Promise<HealthCheckResult> {
+    const timestamp = Date.now();
+    const uptime = timestamp - this.startTime;
+
+    try {
+      // 检查数据库连接
+      const databaseCheck = await this.checkDatabase();
+      
+      // 获取基础指标
+      const metrics = await this.getBasicMetrics();
+
+      // 确定整体状态
+      const overallStatus = this.determineOverallStatus([
+        databaseCheck.status
+      ]);
+
+      return {
+        status: overallStatus,
+        timestamp,
+        uptime,
+        version: process.env.npm_package_version || '1.0.0',
+        services: {
+          database: databaseCheck,
+        },
+        metrics,
+      };
+    } catch (error) {
+      this.logger.error('健康检查失败', error);
+      return {
+        status: 'unhealthy',
+        timestamp,
+        uptime,
+        version: process.env.npm_package_version || '1.0.0',
+        services: {
+          database: {
+            status: 'unhealthy',
+            error: error.message,
+          },
+        },
+        metrics: {
+          totalErrors: 0,
+          errorRate: 0,
+          avgResponseTime: 0,
+        },
+      };
+    }
   }
 
   /**
-   * 检查数据库连接状态
-   * @returns 数据库连接状态
+   * 检查数据库健康状态
+   * @returns 数据库健康状态
    */
-  async checkDatabase() {
-    const results: {
-      mysql: { status: string; connected: boolean; error?: string };
-      clickhouse: { status: string; connected: boolean; error?: string };
-    } = {
-      mysql: { status: 'unknown', connected: false },
-      clickhouse: { status: 'unknown', connected: false },
-    };
-
-    // 检查MySQL连接
+  private async checkDatabase(): Promise<{
+    status: 'healthy' | 'unhealthy';
+    responseTime?: number;
+    error?: string;
+  }> {
     try {
-      await this.connection.query('SELECT 1');
-      results.mysql = { status: 'ok', connected: true };
+      const startTime = Date.now();
+      
+      // 执行简单查询测试数据库连接
+      await this.monitorDataRepository.createQueryBuilder()
+        .select('COUNT(*)', 'count')
+        .getRawOne();
+      
+      const responseTime = Date.now() - startTime;
+      
+      return {
+        status: responseTime < 1000 ? 'healthy' : 'unhealthy',
+        responseTime,
+      };
     } catch (error) {
-      results.mysql = { status: 'error', connected: false, error: error.message };
+      return {
+        status: 'unhealthy',
+        error: error.message,
+      };
     }
+  }
 
-    // 检查ClickHouse连接
+  /**
+   * 获取基础指标
+   * @returns 基础指标
+   */
+  private async getBasicMetrics(): Promise<{
+    totalErrors: number;
+    errorRate: number;
+    avgResponseTime: number;
+  }> {
     try {
-      const clickhouseHealth = await this.clickHouseService.checkHealth();
-      results.clickhouse = clickhouseHealth;
+      // 最近1小时的错误统计
+      const oneHourAgo = new Date();
+      oneHourAgo.setHours(oneHourAgo.getHours() - 1);
+
+      const errorStats = await this.monitorDataRepository
+        .createQueryBuilder('monitor')
+        .select('COUNT(*)', 'total')
+        .addSelect('AVG(monitor.duration)', 'avgDuration')
+        .where('monitor.createdAt >= :oneHourAgo', { oneHourAgo })
+        .getRawOne();
+
+      const totalErrors = parseInt(errorStats?.total || '0');
+      const avgResponseTime = parseFloat(errorStats?.avgDuration || '0');
+      
+      // 计算错误率（假设正常情况下每小时不超过100个错误）
+      const errorRate = Math.min(totalErrors / 100, 1);
+
+      return {
+        totalErrors,
+        errorRate,
+        avgResponseTime,
+      };
     } catch (error) {
-      results.clickhouse = { status: 'error', connected: false, error: error.message };
+      this.logger.error('获取基础指标失败', error);
+      return {
+        totalErrors: 0,
+        errorRate: 0,
+        avgResponseTime: 0,
+      };
     }
+  }
 
-    const overallStatus = results.mysql.connected && results.clickhouse.connected ? 'ok' : 'error';
+  /**
+   * 确定整体健康状态
+   * @param serviceStatuses 服务状态列表
+   * @returns 整体状态
+   */
+  private determineOverallStatus(
+    serviceStatuses: ('healthy' | 'unhealthy')[]
+  ): 'healthy' | 'degraded' | 'unhealthy' {
+    const unhealthyCount = serviceStatuses.filter(status => status === 'unhealthy').length;
+    
+    if (unhealthyCount === 0) {
+      return 'healthy';
+    } else if (unhealthyCount < serviceStatuses.length) {
+      return 'degraded';
+    } else {
+      return 'unhealthy';
+    }
+  }
 
+  /**
+   * 获取简单健康状态
+   * @returns 简单健康状态
+   */
+  async getSimpleHealth(): Promise<{ status: string; timestamp: number }> {
+    try {
+      await this.monitorDataRepository.createQueryBuilder()
+        .select('1')
+        .limit(1)
+        .getRawOne();
+      
+      return {
+        status: 'healthy',
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      return {
+        status: 'unhealthy',
+        timestamp: Date.now(),
+      };
+    }
+  }
+
+  /**
+   * 获取系统信息
+   * @returns 系统信息
+   */
+  getSystemInfo() {
+    const used = process.memoryUsage();
+    const cpuUsage = process.cpuUsage();
+    
     return {
-      status: overallStatus,
-      databases: results,
-      timestamp: new Date().toISOString(),
+      node: {
+        version: process.version,
+        uptime: process.uptime(),
+        platform: process.platform,
+        arch: process.arch,
+      },
+      memory: {
+        rss: Math.round(used.rss / 1024 / 1024),
+        heapTotal: Math.round(used.heapTotal / 1024 / 1024),
+        heapUsed: Math.round(used.heapUsed / 1024 / 1024),
+        external: Math.round(used.external / 1024 / 1024),
+      },
+      cpu: {
+        user: cpuUsage.user,
+        system: cpuUsage.system,
+      },
+      env: process.env.NODE_ENV || 'development',
+      pid: process.pid,
     };
   }
 }

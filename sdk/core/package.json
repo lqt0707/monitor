@@ -1,0 +1,44 @@
+{
+  "name": "@monitor/core",
+  "version": "1.0.0",
+  "description": "Monitor Core - 前端监控SDK核心模块，提供跨平台的监控基础能力",
+  "keywords": [
+    "monitor",
+    "core",
+    "frontend",
+    "cross-platform",
+    "typescript"
+  ],
+  "author": "Monitor Team",
+  "license": "MIT",
+  "homepage": "https://github.com/your-org/monitor/tree/main/sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/monitor.git",
+    "directory": "sdk/core"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/monitor/issues"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

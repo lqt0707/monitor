@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor SDK Web 基础集成示例</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #4f46e5;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+
+        .status-panel {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .status-panel h3 {
+            color: #1e293b;
+            margin-bottom: 10px;
+        }
+
+        #sdk-status {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+        }
+
+        .btn.danger:hover {
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+        }
+
+        .btn.success:hover {
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+        }
+
+        .btn.warning:hover {
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .test-results {
+            background: #1f2937;
+            color: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            max-height: 400px;
+            overflow-y: auto;
+            line-height: 1.5;
+        }
+
+        .test-result-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #4f46e5;
+        }
+
+        .timestamp {
+            color: #9ca3af;
+            margin-right: 10px;
+        }
+
+        .test-type {
+            color: #60a5fa;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+
+        .test-message {
+            color: #d1d5db;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h4 {
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+
+        .info-box p {
+            color: #1e3a8a;
+            margin-bottom: 5px;
+        }
+
+        .feature-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .feature-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+        }
+
+        .feature-item h4 {
+            color: #4f46e5;
+            margin-bottom: 8px;
+        }
+
+        .feature-item p {
+            font-size: 0.9rem;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .button-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Monitor SDK</h1>
+            <p>Web 基础集成示例 - 实时错误监控与性能追踪</p>
+        </div>
+
+        <div class="content">
+            <!-- SDK状态面板 -->
+            <div class="section">
+                <h2>📊 SDK 状态监控</h2>
+                <div class="status-panel">
+                    <h3>实时状态</h3>
+                    <div id="sdk-status">正在初始化...</div>
+                </div>
+            </div>
+
+            <!-- 功能介绍 -->
+            <div class="section">
+                <h2>✨ 核心功能</h2>
+                <div class="feature-list">
+                    <div class="feature-item">
+                        <h4>🔍 错误监控</h4>
+                        <p>自动捕获JavaScript错误、Promise异常、HTTP请求错误等</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>⚡ 性能监控</h4>
+                        <p>收集页面加载性能、用户体验指标、自定义性能数据</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>👤 行为追踪</h4>
+                        <p>记录用户操作行为、页面访问、自定义事件等</p>
+                    </div>
+                    <div class="feature-item">
+                        <h4>📤 实时上报</h4>
+                        <p>支持单条和批量数据上报，智能队列管理</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 测试按钮 -->
+            <div class="section">
+                <h2>🧪 功能测试</h2>
+                <div class="info-box">
+                    <h4>测试说明</h4>
+                    <p>点击下面的按钮来测试各种监控功能，观察SDK的实时响应和数据上报。</p>
+                    <p>确保后端服务已启动：<code>npm run server</code></p>
+                </div>
+                
+                <div class="button-grid">
+                    <button id="test-js-error" class="btn danger">🐛 测试 JavaScript 错误</button>
+                    <button id="test-promise-error" class="btn danger">⚠️ 测试 Promise 错误</button>
+                    <button id="test-http-error" class="btn warning">🌐 测试 HTTP 错误</button>
+                    <button id="test-behavior" class="btn">👆 测试用户行为</button>
+                    <button id="test-performance" class="btn">⏱️ 测试性能监控</button>
+                    <button id="test-user-info" class="btn success">👤 设置用户信息</button>
+                    <button id="test-flush" class="btn success">📤 批量数据上报</button>
+                    <button id="clear-results" class="btn" style="background: #6b7280;">🗑️ 清空结果</button>
+                </div>
+            </div>
+
+            <!-- 测试结果 -->
+            <div class="section">
+                <h2>📋 测试结果</h2>
+                <div id="test-results" class="test-results">
+                    <div class="test-result-item">
+                        <span class="timestamp">[系统]</span>
+                        <span class="test-type">启动:</span>
+                        <span class="test-message">等待SDK初始化完成...</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 加载SDK -->
+    <script type="module" src="./src/main.js"></script>
+</body>
+</html>

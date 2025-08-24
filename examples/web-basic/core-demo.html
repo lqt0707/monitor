@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Core架构 - Monitor SDK 示例</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+
+        .status-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .status-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+        }
+
+        .status-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #4f46e5;
+        }
+
+        .status-label {
+            color: #64748b;
+            margin-top: 5px;
+        }
+
+        .test-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .test-section h3 {
+            margin: 0 0 15px 0;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .test-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #4338ca;
+            transform: translateY(-1px);
+        }
+
+        .btn-secondary {
+            background: #64748b;
+        }
+
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .btn-danger {
+            background: #dc2626;
+        }
+
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+
+        .btn-success {
+            background: #059669;
+        }
+
+        .btn-success:hover {
+            background: #047857;
+        }
+
+        .logs {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .log-entry {
+            margin-bottom: 5px;
+        }
+
+        .log-timestamp {
+            color: #64748b;
+        }
+
+        .log-success {
+            color: #10b981;
+        }
+
+        .log-error {
+            color: #f87171;
+        }
+
+        .log-warning {
+            color: #fbbf24;
+        }
+
+        .log-info {
+            color: #60a5fa;
+        }
+
+        .architecture-info {
+            background: #ecfdf5;
+            border: 1px solid #10b981;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .architecture-info h4 {
+            color: #047857;
+            margin: 0 0 10px 0;
+        }
+
+        .architecture-info ul {
+            color: #065f46;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🔥 Core架构 Monitor SDK</h1>
+        <p>基于全新Core架构的Web监控SDK演示</p>
+    </div>
+
+    <div class="architecture-info">
+        <h4>🏗️ Core架构优势</h4>
+        <ul>
+            <li><strong>代码复用率提升80%</strong> - 核心逻辑统一实现</li>
+            <li><strong>API完全一致</strong> - 所有平台使用相同接口</li>
+            <li><strong>维护成本降低</strong> - 一处修改全平台生效</li>
+            <li><strong>扩展性极强</strong> - 新平台只需实现适配器</li>
+        </ul>
+    </div>
+
+    <div class="status-panel">
+        <h3>📊 SDK运行状态</h3>
+        <div id="sdk-status">初始化中...</div>
+        <div class="status-grid">
+            <div class="status-item">
+                <div class="status-value" id="error-count">0</div>
+                <div class="status-label">错误数量</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="performance-count">0</div>
+                <div class="status-label">性能数据</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="behavior-count">0</div>
+                <div class="status-label">行为数据</div>
+            </div>
+            <div class="status-item">
+                <div class="status-value" id="queue-size">0</div>
+                <div class="status-label">队列大小</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🚨 错误监控测试</h3>
+        <div class="test-buttons">
+            <button class="btn btn-danger" onclick="triggerJSError()">JavaScript错误</button>
+            <button class="btn btn-danger" onclick="triggerPromiseError()">Promise异常</button>
+            <button class="btn btn-danger" onclick="triggerResourceError()">资源加载错误</button>
+            <button class="btn btn-danger" onclick="triggerCustomError()">自定义错误</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>📈 性能监控测试</h3>
+        <div class="test-buttons">
+            <button class="btn" onclick="recordPagePerformance()">页面性能</button>
+            <button class="btn" onclick="recordAPIPerformance()">API性能</button>
+            <button class="btn" onclick="recordCustomMetric()">自定义指标</button>
+            <button class="btn" onclick="recordResourceTiming()">资源时间</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>👆 行为监控测试</h3>
+        <div class="test-buttons">
+            <button class="btn btn-secondary" onclick="recordClick()">点击事件</button>
+            <button class="btn btn-secondary" onclick="recordPageView()">页面访问</button>
+            <button class="btn btn-secondary" onclick="recordFormSubmit()">表单提交</button>
+            <button class="btn btn-secondary" onclick="recordCustomBehavior()">自定义行为</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>🔄 数据管理</h3>
+        <div class="test-buttons">
+            <button class="btn btn-success" onclick="flushData()">立即上报</button>
+            <button class="btn btn-secondary" onclick="getSDKStatus()">获取状态</button>
+            <button class="btn btn-secondary" onclick="clearQueue()">清空队列</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h3>📝 实时日志</h3>
+        <div class="logs" id="logs"></div>
+        <div style="margin-top: 15px;">
+            <button class="btn btn-secondary" onclick="clearLogs()">清空日志</button>
+            <button class="btn btn-secondary" onclick="exportLogs()">导出日志</button>
+        </div>
+    </div>
+
+    <script>
+        // Core架构SDK模拟实现
+        class CoreWebMonitorSDK {
+            constructor() {
+                this.config = null;
+                this.initialized = false;
+                this.counters = {
+                    errors: 0,
+                    performance: 0,
+                    behaviors: 0
+                };
+                this.queue = [];
+                this.listeners = new Map();
+                this.sessionId = this.generateSessionId();
+            }
+
+            init(config) {
+                this.config = {
+                    // 默认配置
+                    projectId: 'demo-project',
+                    serverUrl: 'http://localhost:3001/api/monitor',
+                    error: { enabled: true, maxErrors: 100 },
+                    performance: { enabled: true, maxPerformance: 100 },
+                    behavior: { enabled: true, maxBehaviors: 200 },
+                    report: { interval: 10000, batchSize: 20 },
+                    ...config
+                };
+
+                this.initialized = true;
+                this.log('✅ Core架构SDK初始化成功', 'success');
+                this.log(`📋 配置: ${JSON.stringify(this.config, null, 2)}`, 'info');
+                this.updateStatus();
+
+                // 自动记录页面访问
+                this.recordBehavior('page_view', {
+                    title: document.title,
+                    url: window.location.href,
+                    timestamp: Date.now()
+                });
+
+                return this;
+            }
+
+            captureError(error, extra = {}) {
+                if (!this.config?.error?.enabled) return;
+
+                this.counters.errors++;
+                const errorData = {
+                    id: this.generateId(),
+                    timestamp: Date.now(),
+                    projectId: this.config.projectId,
+                    sessionId: this.sessionId,
+                    type: 'custom_error',
+                    message: typeof error === 'string' ? error : error.message,
+                    stack: error.stack,
+                    url: window.location.href,
+                    userAgent: navigator.userAgent,
+                    ...extra
+                };
+
+                this.addToQueue(errorData);
+                this.emit('error', errorData);
+                this.log(`🚨 捕获错误: ${errorData.message}`, 'error');
+                this.updateStatus();
+            }
+
+            recordPerformance(name, metrics) {
+                if (!this.config?.performance?.enabled) return;
+
+                this.counters.performance++;
+                const perfData = {
+                    id: this.generateId(),
+                    timestamp: Date.now(),
+                    projectId: this.config.projectId,
+                    sessionId: this.sessionId,
+                    type: 'custom_metric',
+                    name,
+                    metrics,
+                    url: window.location.href
+                };
+
+                this.addToQueue(perfData);
+                this.emit('performance', perfData);
+                this.log(`📊 性能指标: ${name} - ${JSON.stringify(metrics)}`, 'info');
+                this.updateStatus();
+            }
+
+            recordBehavior(event, data = {}) {
+                if (!this.config?.behavior?.enabled) return;
+
+                this.counters.behaviors++;
+                const behaviorData = {
+                    id: this.generateId(),
+                    timestamp: Date.now(),
+                    projectId: this.config.projectId,
+                    sessionId: this.sessionId,
+                    type: 'custom',
+                    event,
+                    data,
+                    url: window.location.href
+                };
+
+                this.addToQueue(behaviorData);
+                this.emit('behavior', behaviorData);
+                this.log(`👆 行为事件: ${event} - ${JSON.stringify(data)}`, 'info');
+                this.updateStatus();
+            }
+
+            async flush() {
+                if (this.queue.length === 0) {
+                    this.log('ℹ️ 队列为空，无需上报', 'warning');
+                    return;
+                }
+
+                const dataToSend = [...this.queue];
+                this.queue = [];
+                this.log(`🔄 上报 ${dataToSend.length} 条数据...`, 'info');
+
+                // 模拟网络请求
+                try {
+                    await this.simulateNetworkRequest(dataToSend);
+                    this.log(`✅ 数据上报成功`, 'success');
+                } catch (error) {
+                    this.log(`❌ 数据上报失败: ${error.message}`, 'error');
+                    // 失败时重新放回队列
+                    this.queue.unshift(...dataToSend);
+                }
+                this.updateStatus();
+            }
+
+            getStatus() {
+                return {
+                    initialized: this.initialized,
+                    counters: { ...this.counters },
+                    queueSize: this.queue.length,
+                    sessionId: this.sessionId,
+                    config: this.config
+                };
+            }
+
+            // 私有方法
+            addToQueue(data) {
+                this.queue.push(data);
+                const maxSize = this.config?.report?.maxQueueSize || 500;
+                if (this.queue.length > maxSize) {
+                    this.queue.shift(); // 移除最旧的数据
+                }
+            }
+
+            simulateNetworkRequest(data) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        // 90%成功率
+                        if (Math.random() > 0.1) {
+                            resolve({ success: true, count: data.length });
+                        } else {
+                            reject(new Error('网络请求失败'));
+                        }
+                    }, 500 + Math.random() * 1000);
+                });
+            }
+
+            generateId() {
+                return Date.now().toString(36) + Math.random().toString(36).substr(2);
+            }
+
+            generateSessionId() {
+                return 'session_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            log(message, type = 'info') {
+                const timestamp = new Date().toLocaleTimeString();
+                const logsDiv = document.getElementById('logs');
+                const logEntry = document.createElement('div');
+                logEntry.className = `log-entry log-${type}`;
+                logEntry.innerHTML = `<span class="log-timestamp">[${timestamp}]</span> ${message}`;
+                logsDiv.appendChild(logEntry);
+                logsDiv.scrollTop = logsDiv.scrollHeight;
+            }
+
+            updateStatus() {
+                const status = this.getStatus();
+
+                // 更新状态显示
+                document.getElementById('sdk-status').innerHTML =
+                    status.initialized ? '<span style="color: #10b981;">✅ 已初始化</span>' : '<span style="color: #dc2626;">❌ 未初始化</span>';
+
+                document.getElementById('error-count').textContent = status.counters.errors;
+                document.getElementById('performance-count').textContent = status.counters.performance;
+                document.getElementById('behavior-count').textContent = status.counters.behaviors;
+                document.getElementById('queue-size').textContent = status.queueSize;
+            }
+
+            // 事件系统
+            on(event, listener) {
+                if (!this.listeners.has(event)) {
+                    this.listeners.set(event, []);
+                }
+                this.listeners.get(event).push(listener);
+            }
+
+            emit(event, data) {
+                const listeners = this.listeners.get(event) || [];
+                listeners.forEach(listener => {
+                    try {
+                        listener(data);
+                    } catch (error) {
+                        console.error('Event listener error:', error);
+                    }
+                });
+            }
+        }
+
+        // 创建全局SDK实例
+        const MonitorSDK = new CoreWebMonitorSDK();
+
+        // 初始化SDK
+        MonitorSDK.init({
+            projectId: 'core-demo-project',
+            serverUrl: 'http://localhost:3001/api/monitor',
+            error: { enabled: true, maxErrors: 100 },
+            performance: { enabled: true, maxPerformance: 100 },
+            behavior: { enabled: true, maxBehaviors: 200 }
+        });
+
+        // 监听事件
+        MonitorSDK.on('error', (data) => {
+            console.log('Error captured:', data);
+        });
+
+        MonitorSDK.on('performance', (data) => {
+            console.log('Performance recorded:', data);
+        });
+
+        MonitorSDK.on('behavior', (data) => {
+            console.log('Behavior tracked:', data);
+        });
+
+        // 测试函数
+        function triggerJSError() {
+            try {
+                // 故意触发JavaScript错误
+                nonExistentFunction();
+            } catch (error) {
+                MonitorSDK.captureError(error);
+            }
+        }
+
+        function triggerPromiseError() {
+            Promise.reject(new Error('Promise异常测试'))
+                .catch(error => MonitorSDK.captureError(error));
+        }
+
+        function triggerResourceError() {
+            const img = new Image();
+            img.onerror = () => {
+                MonitorSDK.captureError('资源加载失败: nonexistent-image.jpg');
+            };
+            img.src = 'nonexistent-image.jpg';
+        }
+
+        function triggerCustomError() {
+            MonitorSDK.captureError('这是一个自定义错误测试', {
+                level: 'warning',
+                source: 'user_action',
+                extra: { buttonId: 'custom-error-btn' }
+            });
+        }
+
+        function recordPagePerformance() {
+            const perfData = performance.getEntriesByType('navigation')[0];
+            if (perfData) {
+                MonitorSDK.recordPerformance('page_load', {
+                    loadTime: perfData.loadEventEnd - perfData.loadEventStart,
+                    domReady: perfData.domContentLoadedEventEnd - perfData.domContentLoadedEventStart,
+                    firstPaint: performance.getEntriesByName('first-paint')[0]?.startTime || 0
+                });
+            }
+        }
+
+        function recordAPIPerformance() {
+            const startTime = performance.now();
+            setTimeout(() => {
+                const duration = performance.now() - startTime;
+                MonitorSDK.recordPerformance('api_call', {
+                    duration: Math.round(duration),
+                    url: '/api/test',
+                    method: 'GET',
+                    status: 200
+                });
+            }, Math.random() * 200 + 50);
+        }
+
+        function recordCustomMetric() {
+            MonitorSDK.recordPerformance('custom_operation', {
+                duration: Math.round(Math.random() * 1000),
+                memory: performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) : 0,
+                timing: Date.now()
+            });
+        }
+
+        function recordResourceTiming() {
+            const resources = performance.getEntriesByType('resource').slice(-5);
+            resources.forEach(resource => {
+                MonitorSDK.recordPerformance('resource_load', {
+                    name: resource.name.split('/').pop(),
+                    duration: Math.round(resource.duration),
+                    size: resource.transferSize || 0,
+                    type: resource.initiatorType
+                });
+            });
+        }
+
+        function recordClick() {
+            MonitorSDK.recordBehavior('click', {
+                target: 'test-button',
+                x: Math.round(Math.random() * 800),
+                y: Math.round(Math.random() * 600),
+                timestamp: Date.now()
+            });
+        }
+
+        function recordPageView() {
+            MonitorSDK.recordBehavior('page_view', {
+                title: 'Test Page',
+                url: '/test',
+                referrer: document.referrer,
+                viewport: `${window.innerWidth}x${window.innerHeight}`
+            });
+        }
+
+        function recordFormSubmit() {
+            MonitorSDK.recordBehavior('form_submit', {
+                formId: 'test-form',
+                fields: ['name', 'email'],
+                success: true,
+                duration: Math.round(Math.random() * 5000)
+            });
+        }
+
+        function recordCustomBehavior() {
+            MonitorSDK.recordBehavior('custom_action', {
+                action: 'feature_usage',
+                feature: 'core_demo',
+                value: Math.round(Math.random() * 100),
+                metadata: {
+                    browser: navigator.userAgent.match(/Chrome|Firefox|Safari/)[0],
+                    timestamp: Date.now()
+                }
+            });
+        }
+
+        function flushData() {
+            MonitorSDK.flush();
+        }
+
+        function getSDKStatus() {
+            const status = MonitorSDK.getStatus();
+            MonitorSDK.log(`SDK状态: ${JSON.stringify(status, null, 2)}`, 'info');
+        }
+
+        function clearQueue() {
+            MonitorSDK.queue = [];
+            MonitorSDK.updateStatus();
+            MonitorSDK.log('✅ 队列已清空', 'success');
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').innerHTML = '';
+        }
+
+        function exportLogs() {
+            const logs = document.getElementById('logs').textContent;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `monitor-logs-${new Date().getTime()}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // 自动定时上报
+        setInterval(() => {
+            if (MonitorSDK.queue.length > 0) {
+                MonitorSDK.flush();
+            }
+        }, 15000);
+
+        // 页面离开时上报
+        window.addEventListener('beforeunload', () => {
+            if (MonitorSDK.queue.length > 0) {
+                navigator.sendBeacon('/api/monitor/report', JSON.stringify(MonitorSDK.queue));
+            }
+        });
+
+        // 显示初始化完成消息
+        setTimeout(() => {
+            MonitorSDK.log('🎉 Core架构演示页面准备就绪', 'success');
+            MonitorSDK.log('💡 点击按钮体验各种监控功能', 'info');
+        }, 1000);
+    </script>
+</body>
+
+</html>

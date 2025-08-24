@@ -1,0 +1,59 @@
+{
+  "name": "@monitor/taro-sdk",
+  "version": "1.0.0",
+  "description": "Monitor Taro SDK - 专为Taro小程序设计的前端监控SDK，支持微信、支付宝、百度等小程序平台",
+  "keywords": [
+    "monitor",
+    "taro",
+    "miniprogram",
+    "wechat",
+    "alipay",
+    "baidu",
+    "error-tracking",
+    "performance",
+    "analytics",
+    "小程序",
+    "监控"
+  ],
+  "author": "Monitor Team",
+  "license": "MIT",
+  "homepage": "https://github.com/your-org/monitor/tree/main/sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/monitor.git",
+    "directory": "sdk/taro-core"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/monitor/issues"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "peerDependencies": {
+    "@tarojs/taro": ">=3.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@tarojs/taro": {
+      "optional": false
+    }
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

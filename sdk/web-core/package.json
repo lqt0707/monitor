@@ -1,0 +1,57 @@
+{
+  "name": "@monitor/web-sdk",
+  "version": "1.0.0",
+  "description": "Monitor Web SDK - 专为Web平台设计的前端监控SDK，轻量级、高性能、开箱即用",
+  "keywords": [
+    "monitor",
+    "web",
+    "frontend",
+    "error-tracking",
+    "performance",
+    "analytics",
+    "javascript",
+    "typescript",
+    "react",
+    "vue",
+    "angular"
+  ],
+  "author": "Monitor Team",
+  "license": "MIT",
+  "homepage": "https://github.com/your-org/monitor/tree/main/sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/monitor.git",
+    "directory": "sdk/web-core"
+  },
+  "bugs": {
+    "url": "https://github.com/your-org/monitor/issues"
+  },
+  "main": "dist/index.js",
+  "module": "dist/index.esm.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.esm.js",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie <= 11"
+  ]
+}

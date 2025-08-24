@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor SDK Web 示例</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            background: #f8fafc;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            color: #4f46e5;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #64748b;
+            font-size: 1.1rem;
+        }
+
+        .examples {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .example-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e2e8f0;
+        }
+
+        .example-card h3 {
+            color: #1e293b;
+            margin-bottom: 12px;
+            font-size: 1.3rem;
+        }
+
+        .example-card p {
+            color: #64748b;
+            margin-bottom: 16px;
+        }
+
+        .example-link {
+            display: inline-block;
+            background: #4f46e5;
+            color: white;
+            text-decoration: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .example-link:hover {
+            background: #4338ca;
+        }
+
+        .info-box {
+            background: #dbeafe;
+            border: 1px solid #3b82f6;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .info-box h4 {
+            color: #1e40af;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #1e3a8a;
+            margin-bottom: 8px;
+        }
+
+        .footer {
+            text-align: center;
+            color: #64748b;
+            font-size: 0.9rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <h1>🚀 Monitor SDK</h1>
+        <p>Web 端监控SDK示例集合</p>
+    </div>
+
+    <div class="info-box">
+        <h4>📋 使用说明</h4>
+        <p><strong>1. 启动后端服务：</strong> <code>npm run server</code></p>
+        <p><strong>2. 安装依赖：</strong> <code>npm install</code> (在 examples/web-basic 目录)</p>
+        <p><strong>3. 启动开发服务器：</strong> <code>npm run dev</code></p>
+        <p><strong>4. 选择下面的示例进行测试</strong></p>
+    </div>
+
+    <div class="examples">
+        <div class="example-card">
+            <h3>🔥 Core架构示例 (最新)</h3>
+            <p>基于全新Core架构的Web监控SDK演示，展示统一API、错误聚合、智能队列等高级功能。</p>
+            <a href="./core-demo.html" class="example-link">查看示例</a>
+        </div>
+
+        <div class="example-card">
+            <h3>🎯 基础集成示例</h3>
+            <p>展示最新版本SDK的完整集成方式，包含错误监控、性能监控、用户行为追踪等核心功能。</p>
+            <a href="./monitor-demo.html" class="example-link">查看示例</a>
+        </div>
+
+        <div class="example-card">
+            <h3>🔧 基础HTML示例</h3>
+            <p>最简单的HTML页面集成方式，适合快速测试和学习SDK的基本用法。</p>
+            <a href="./basic.html" class="example-link">查看示例</a>
+        </div>
+
+        <div class="example-card">
+            <h3>⚛️ React集成示例</h3>
+            <p>展示如何在React应用中集成SDK，包含错误边界和Hook的使用方式。</p>
+            <a href="./react-example.html" class="example-link">查看示例</a>
+        </div>
+
+        <div class="example-card">
+            <h3>💚 Vue集成示例</h3>
+            <p>展示如何在Vue应用中集成SDK，包含全局错误处理和组件级监控。</p>
+            <a href="./vue-example.html" class="example-link">查看示例</a>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Monitor SDK v1.0.0 - 由 Monitor Team 开发</p>
+    </div>
+</body>
+
+</html>

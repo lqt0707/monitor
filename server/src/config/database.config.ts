@@ -4,6 +4,7 @@ import { TypeOrmModuleOptions, TypeOrmOptionsFactory } from "@nestjs/typeorm";
 import { MonitorData } from "../modules/monitor/entities/monitor-data.entity";
 import { ErrorLog } from "../modules/monitor/entities/error-log.entity";
 import { ErrorAggregation } from "../modules/monitor/entities/error-aggregation.entity";
+import { PerformanceMetric } from "../modules/monitor/entities/performance-metric.entity";
 import { ProjectConfig } from "../modules/project-config/entities/project-config.entity";
 import { User } from "../modules/auth/entities/user.entity";
 
@@ -27,7 +28,14 @@ export class MySQLDatabaseConfig implements TypeOrmOptionsFactory {
       username: this.configService.get<string>("MYSQL_USERNAME", "root"),
       password: this.configService.get<string>("MYSQL_PASSWORD", ""),
       database: this.configService.get<string>("MYSQL_DATABASE", "monitor"),
-      entities: [MonitorData, ErrorLog, ErrorAggregation, ProjectConfig, User],
+      entities: [
+        MonitorData,
+        ErrorLog,
+        ErrorAggregation,
+        PerformanceMetric,
+        ProjectConfig,
+        User,
+      ],
       synchronize: this.configService.get<boolean>("MYSQL_SYNCHRONIZE", true),
       logging: this.configService.get<boolean>("MYSQL_LOGGING", false),
       migrations: ["dist/database/migrations/mysql/*.js"],
@@ -54,10 +62,7 @@ export class ClickHouseConfig {
       host: `http://${this.configService.get<string>(
         "CLICKHOUSE_HOST",
         "localhost"
-      )}:${this.configService.get<string>(
-        "CLICKHOUSE_PORT",
-        "8123"
-      )}`,
+      )}:${this.configService.get<string>("CLICKHOUSE_PORT", "8123")}`,
       username: this.configService.get<string>(
         "CLICKHOUSE_USERNAME",
         "default"
