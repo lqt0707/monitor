@@ -1,16 +1,21 @@
 import { Module } from "@nestjs/common";
-import { ConfigModule } from "@nestjs/config";
+import { ConfigModule as NestConfigModule } from "@nestjs/config";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import { BullModule } from "@nestjs/bull";
 import { MonitorModule } from "./modules/monitor/monitor.module";
 import { HealthModule } from "./modules/health/health.module";
 import { ProcessorsModule } from "./processors/processors.module";
 import { ClickHouseModule } from "./modules/clickhouse/clickhouse.module";
+import { ClickHousePerformanceModule } from "./modules/clickhouse/clickhouse-performance.module";
 import { ProjectConfigModule } from "./modules/project-config/project-config.module";
 import { EmailModule } from "./modules/email/email.module";
 import { AuthModule } from "./modules/auth/auth.module";
+import { SourcemapModule } from "./modules/sourcemap/sourcemap.module";
+import { AlertModule } from "./modules/alert/alert.module";
+import { LoggingModule } from "./modules/logging/logging.module";
 import { MySQLDatabaseConfig } from "./config/database.config";
 import { RedisConfigService } from "./config/redis.config";
+import { ConfigModule } from "./common/config/config.module";
 
 /**
  * 应用根模块
@@ -18,10 +23,7 @@ import { RedisConfigService } from "./config/redis.config";
 @Module({
   imports: [
     // 配置模块
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: [".env.local", ".env"],
-    }),
+    ConfigModule,
 
     // 数据库模块
     TypeOrmModule.forRootAsync({
@@ -53,8 +55,12 @@ import { RedisConfigService } from "./config/redis.config";
     HealthModule,
     ProcessorsModule,
     ClickHouseModule,
+    ClickHousePerformanceModule,
     ProjectConfigModule,
     EmailModule,
+    SourcemapModule,
+    AlertModule,
+    LoggingModule,
   ],
 })
 export class AppModule {}

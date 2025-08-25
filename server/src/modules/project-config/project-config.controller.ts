@@ -173,7 +173,7 @@ export class ProjectConfigController {
   @ApiParam({ name: "id", description: "项目ID", example: 1 })
   @ApiResponse({ status: 200, description: "获取成功" })
   @ApiResponse({ status: 404, description: "项目配置不存在" })
-  async getSourcemapConfig(@Param("id", ParseIntPipe) id: number) {
+  async getSourcemapConfig(@Param("id") id: string) {
     return await this.projectConfigService.getSourcemapConfig(id);
   }
 
@@ -189,7 +189,7 @@ export class ProjectConfigController {
   @ApiResponse({ status: 200, description: "更新成功", type: ProjectConfig })
   @ApiResponse({ status: 404, description: "项目配置不存在" })
   async updateSourcemapConfig(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("id") id: string,
     @Body() body: { enableSourcemap: boolean; sourcemapPath: string }
   ): Promise<ProjectConfig> {
     const { enableSourcemap, sourcemapPath } = body;

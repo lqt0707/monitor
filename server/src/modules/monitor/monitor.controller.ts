@@ -34,7 +34,7 @@ export class MonitorController {
       const result = await this.monitorService.saveMonitorData(reportData);
       return {
         success: true,
-        message: "数据上报成功",
+        message: result.message,
         data: { id: result.id },
       };
     } catch (error) {

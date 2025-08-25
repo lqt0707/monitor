@@ -1,7 +1,7 @@
-import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
-import { PerformanceMetricType } from './create-performance-metric.dto';
+import { IsOptional, IsEnum, IsString, IsInt, Min, Max } from "class-validator";
+import { Type, Transform } from "class-transformer";
+import { ApiPropertyOptional } from "@nestjs/swagger";
+import { PerformanceMetricType } from "./create-performance-metric.dto";
 
 /**
  * 查询性能指标DTO
@@ -10,7 +10,7 @@ export class QueryPerformanceMetricDto {
   /**
    * 项目ID
    */
-  @ApiPropertyOptional({ description: '项目ID' })
+  @ApiPropertyOptional({ description: "项目ID" })
   @IsOptional()
   @IsString()
   projectId?: string;
@@ -18,7 +18,7 @@ export class QueryPerformanceMetricDto {
   /**
    * 平台代码
    */
-  @ApiPropertyOptional({ description: '平台代码' })
+  @ApiPropertyOptional({ description: "平台代码" })
   @IsOptional()
   @IsString()
   platformCode?: string;
@@ -26,9 +26,9 @@ export class QueryPerformanceMetricDto {
   /**
    * 指标类型
    */
-  @ApiPropertyOptional({ 
-    description: '指标类型', 
-    enum: PerformanceMetricType 
+  @ApiPropertyOptional({
+    description: "指标类型",
+    enum: PerformanceMetricType,
   })
   @IsOptional()
   @IsEnum(PerformanceMetricType)
@@ -37,7 +37,7 @@ export class QueryPerformanceMetricDto {
   /**
    * 指标名称
    */
-  @ApiPropertyOptional({ description: '指标名称' })
+  @ApiPropertyOptional({ description: "指标名称" })
   @IsOptional()
   @IsString()
   metricName?: string;
@@ -45,7 +45,7 @@ export class QueryPerformanceMetricDto {
   /**
    * 页面URL
    */
-  @ApiPropertyOptional({ description: '页面URL' })
+  @ApiPropertyOptional({ description: "页面URL" })
   @IsOptional()
   @IsString()
   pageUrl?: string;
@@ -53,7 +53,7 @@ export class QueryPerformanceMetricDto {
   /**
    * 开始日期
    */
-  @ApiPropertyOptional({ description: '开始日期', example: '2023-01-01' })
+  @ApiPropertyOptional({ description: "开始日期", example: "2023-01-01" })
   @IsOptional()
   @IsString()
   startDate?: string;
@@ -61,7 +61,7 @@ export class QueryPerformanceMetricDto {
   /**
    * 结束日期
    */
-  @ApiPropertyOptional({ description: '结束日期', example: '2023-12-31' })
+  @ApiPropertyOptional({ description: "结束日期", example: "2023-12-31" })
   @IsOptional()
   @IsString()
   endDate?: string;
@@ -69,7 +69,7 @@ export class QueryPerformanceMetricDto {
   /**
    * 页码
    */
-  @ApiPropertyOptional({ description: '页码', default: 1, minimum: 1 })
+  @ApiPropertyOptional({ description: "页码", default: 1, minimum: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -79,35 +79,47 @@ export class QueryPerformanceMetricDto {
   /**
    * 每页数量
    */
-  @ApiPropertyOptional({ description: '每页数量', default: 20, minimum: 1, maximum: 100 })
+  @ApiPropertyOptional({
+    description: "每页数量",
+    default: 20,
+    minimum: 1,
+    maximum: 100,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 20;
+  pageSize?: number = 20;
 
   /**
    * 排序字段
    */
-  @ApiPropertyOptional({ 
-    description: '排序字段', 
-    default: 'metricTimestamp',
-    enum: ['metricTimestamp', 'receivedAt', 'metricName', 'metricType', 'responseTime', 'loadComplete']
+  @ApiPropertyOptional({
+    description: "排序字段",
+    default: "metricTimestamp",
+    enum: [
+      "metricTimestamp",
+      "receivedAt",
+      "metricName",
+      "metricType",
+      "responseTime",
+      "loadComplete",
+    ],
   })
   @IsOptional()
   @IsString()
-  sortBy?: string = 'metricTimestamp';
+  sortBy?: string = "metricTimestamp";
 
   /**
    * 排序顺序
    */
-  @ApiPropertyOptional({ 
-    description: '排序顺序', 
-    default: 'DESC',
-    enum: ['ASC', 'DESC']
+  @ApiPropertyOptional({
+    description: "排序顺序",
+    default: "DESC",
+    enum: ["ASC", "DESC"],
   })
   @IsOptional()
-  @IsEnum(['ASC', 'DESC'])
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  @IsEnum(["ASC", "DESC"])
+  sortOrder?: "ASC" | "DESC" = "DESC";
 }

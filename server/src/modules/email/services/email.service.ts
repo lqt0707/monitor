@@ -56,9 +56,10 @@ export class EmailService {
    * 发送错误告警邮件
    * @param errorAggregation 错误聚合信息
    * @param projectConfig 项目配置
+   * @param triggeredRules 触发的告警规则列表
    * @returns 发送结果
    */
-  async sendErrorAlert(errorAggregation: ErrorAggregation, projectConfig: ProjectConfig): Promise<boolean> {
+  async sendErrorAlert(errorAggregation: ErrorAggregation, projectConfig: ProjectConfig, triggeredRules?: any[]): Promise<boolean> {
     if (!this.transporter || !projectConfig.alertEmail) {
       this.logger.warn(`无法发送告警邮件: ${!this.transporter ? '邮件服务未配置' : '未设置告警邮箱'}`);
       return false;
@@ -81,6 +82,7 @@ export class EmailService {
         sourceColumn: errorAggregation.sourceColumn,
         aiDiagnosis: errorAggregation.aiDiagnosis,
         errorStack: errorAggregation.errorStack,
+        triggeredRules,
       });
       
       const result = await this.transporter.sendMail({

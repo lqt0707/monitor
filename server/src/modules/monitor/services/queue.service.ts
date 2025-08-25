@@ -11,6 +11,7 @@ import {
 import { ErrorLog } from "../entities/error-log.entity";
 import { ErrorAggregation } from "../entities/error-aggregation.entity";
 import { ProjectConfig } from "../../project-config/entities/project-config.entity";
+import { MonitorData } from "../entities/monitor-data.entity";
 
 /**
  * 队列服务
@@ -30,6 +31,8 @@ export class QueueService {
     private sourcemapProcessingQueue: Queue,
     @InjectQueue(QUEUE_NAMES.ERROR_AGGREGATION)
     private errorAggregationQueue: Queue,
+    @InjectQueue(QUEUE_NAMES.MONITOR_PROCESSING)
+    private monitorProcessingQueue: Queue,
     private configService: ConfigService
   ) {}
 
@@ -231,10 +234,42 @@ export class QueueService {
   }
 
   /**
-   * 获取队列状态信息
-   * @returns 队列状态
+   * 添加监控数据处理任务
+   * @param monitorData 监控数据
+   * @param priority 优先级
    */
-  async getQueueStats(): Promise<QueueStats> {
+  async addMonitorProcessingJob(
+    monitorData: MonitorData,
+    priority: number = JOB_PRIORITIES.NORMAL
+  ): Promise<void> {
+    try {
+      await this.monitorProcessingQueue.add(
+        JOB_TYPES.PROCESS_MONITOR_DATA,
+        { monitorData },
+        {
+          priority,
+          attempts: 2,
+          backoff: {
+            type: "exponential",
+            delay: 1000,
+          },
+          removeOnComplete: 500,
+          removeOnFail: 100,
+        }
+      );
+
+      this.logger.log(`监控数据处理任务已添加到队列: ${monitorData.id}`);
+    } catch (error) {
+      this.logger.error(`添加监控数据处理任务失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+    * 获取队列状态信息
+    * @returns 队列状态
+    */
+   async getQueueStats(): Promise<QueueStats> {
     try {
       const stats: QueueStats = {
         errorProcessing: await this.getQueueInfo(this.errorProcessingQueue),
@@ -244,6 +279,7 @@ export class QueueService {
           this.sourcemapProcessingQueue
         ),
         errorAggregation: await this.getQueueInfo(this.errorAggregationQueue),
+        monitorProcessing: await this.getQueueInfo(this.monitorProcessingQueue),
       };
 
       return stats;
@@ -290,6 +326,7 @@ export class QueueService {
             this.emailNotificationQueue,
             this.sourcemapProcessingQueue,
             this.errorAggregationQueue,
+            this.monitorProcessingQueue,
           ];
 
       for (const queue of queuesToClean) {
@@ -323,6 +360,8 @@ export class QueueService {
         return this.sourcemapProcessingQueue;
       case QUEUE_NAMES.ERROR_AGGREGATION:
         return this.errorAggregationQueue;
+      case QUEUE_NAMES.MONITOR_PROCESSING:
+        return this.monitorProcessingQueue;
       default:
         return null;
     }
@@ -373,4 +412,5 @@ export interface QueueStats {
   emailNotification: QueueInfo;
   sourcemapProcessing: QueueInfo;
   errorAggregation: QueueInfo;
+  monitorProcessing: QueueInfo;
 }

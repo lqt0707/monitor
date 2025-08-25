@@ -20,5 +20,20 @@
     "paths": {
       "@/*": ["src/*"]
     }
-  }
+  },
+  "watchOptions": {
+    "watchFile": "useFsEvents",
+    "watchDirectory": "useFsEvents",
+    "fallbackPolling": "dynamicPriority",
+    "synchronousWatchDirectory": true,
+    "excludeDirectories": ["**/node_modules", "**/dist", "**/logs", "**/storage"]
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "logs",
+    "storage",
+    "**/*.spec.ts",
+    "**/*.test.ts"
+  ]
 }

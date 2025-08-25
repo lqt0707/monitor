@@ -5,6 +5,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { ErrorLog } from "../../monitor/entities/error-log.entity";
 import { ErrorAggregation } from "../../monitor/entities/error-aggregation.entity";
+import { ProjectConfig } from "../../project-config/entities/project-config.entity";
 import { SourceMapService } from "../services/sourcemap.service";
 import { QueueService } from "../../monitor/services/queue.service";
 import { ProjectConfigService } from "../../project-config/project-config.service";
@@ -24,6 +25,8 @@ export class SourcemapProcessingProcessor {
     private readonly errorLogRepository: Repository<ErrorLog>,
     @InjectRepository(ErrorAggregation)
     private readonly errorAggregationRepository: Repository<ErrorAggregation>,
+    @InjectRepository(ProjectConfig)
+    private readonly projectConfigRepository: Repository<ProjectConfig>,
     private readonly sourcemapService: SourceMapService,
     private readonly queueService: QueueService,
     private readonly projectConfigService: ProjectConfigService
@@ -53,8 +56,15 @@ export class SourcemapProcessingProcessor {
       }
 
       // 获取项目的SourceMap配置
+      const projectConfig = await this.projectConfigRepository.findOne({
+        where: { projectId }
+      });
+      if (!projectConfig) {
+        this.logger.warn(`项目配置不存在: ${projectId}`);
+        return;
+      }
       const sourcemapConfig =
-        await this.projectConfigService.getSourcemapConfig(parseInt(projectId));
+        await this.projectConfigService.getSourcemapConfig(projectConfig.projectId);
       if (
         !sourcemapConfig ||
         !sourcemapConfig.enableSourcemap ||

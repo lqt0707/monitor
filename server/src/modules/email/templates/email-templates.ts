@@ -22,6 +22,7 @@ export class EmailTemplates {
     sourceColumn?: number;
     aiDiagnosis?: string;
     errorStack?: string;
+    triggeredRules?: any[];
   }): string {
     const errorLevelText = this.getErrorLevelText(data.errorLevel);
     const errorLevelColor = this.getErrorLevelColor(data.errorLevel);
@@ -55,6 +56,26 @@ export class EmailTemplates {
           <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">错误堆栈:</td>
           <td style="padding: 10px; border-bottom: 1px solid #eee;">
             <pre style="background-color: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; white-space: pre-wrap;">${data.errorStack}</pre>
+          </td>
+        </tr>
+      `;
+    }
+
+    let triggeredRulesInfo = '';
+    if (data.triggeredRules && data.triggeredRules.length > 0) {
+      const rulesHtml = data.triggeredRules.map(rule => `
+        <div style="margin-bottom: 10px; padding: 10px; background-color: #f8f9fa; border-radius: 4px; border-left: 4px solid #007bff;">
+          <strong>${rule.name}</strong> (${rule.type})
+          <br>
+          <small>条件: ${rule.condition} ${rule.threshold} (${rule.timeWindow}分钟窗口)</small>
+        </div>
+      `).join('');
+      
+      triggeredRulesInfo = `
+        <tr>
+          <td style="padding: 10px; border-bottom: 1px solid #eee; font-weight: bold;">触发告警规则:</td>
+          <td style="padding: 10px; border-bottom: 1px solid #eee;">
+            ${rulesHtml}
           </td>
         </tr>
       `;
@@ -185,6 +206,7 @@ export class EmailTemplates {
               ${sourceInfo}
               ${aiDiagnosis}
               ${stackTrace}
+              ${triggeredRulesInfo}
             </table>
           </div>
           

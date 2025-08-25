@@ -1,0 +1,9 @@
+{
+  "version": 3,
+  "file": "example.js",
+  "sourceRoot": "",
+  "sources": ["example.ts"],
+  "names": [],
+  "mappings": "AAAA,MAAM,CAAC,GAAG,GAAG,CAAC;AACb,MAAM,CAAC,GAAG,GAAG,CAAC;AACb,OAAO,CAAC,GAAG,CAAC,CAAC,CAAC",
+  "sourcesContent": ["const greeting = 'Hello'\nconst name = 'World'\nconsole.log(greeting + ', ' + name)"]
+}

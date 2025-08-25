@@ -3,9 +3,9 @@
  * 根据用户权限控制组件的显示和隐藏
  */
 
-import React from 'react';
-import { usePermission } from '../hooks/usePermission';
-import type { User } from '../types/monitor';
+import React from "react";
+import { usePermission } from "../hooks/usePermission";
+import type { User } from "../types/monitor";
 
 /**
  * 权限守卫组件 Props
@@ -19,7 +19,7 @@ interface PermissionGuardProps {
   // 是否需要所有权限
   requireAll?: boolean;
   // 角色检查
-  role?: 'admin' | 'user';
+  role?: "admin" | "user";
   // 无权限时的回退内容
   fallback?: React.ReactNode;
   // 自定义权限检查函数
@@ -41,7 +41,13 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
   fallback = null,
   customCheck,
 }) => {
-  const { user, hasPermission: checkPermission, hasAnyPermission, hasAllPermissions, hasRole: checkRole } = usePermission();
+  const {
+    user,
+    hasPermission: checkPermission,
+    hasAnyPermission,
+    hasAllPermissions,
+    hasRole: checkRole,
+  } = usePermission();
 
   // 自定义检查函数
   if (customCheck) {
@@ -63,7 +69,7 @@ const PermissionGuard: React.FC<PermissionGuardProps> = ({
     const hasRequiredPermissions = requireAll
       ? hasAllPermissions(permissions)
       : hasAnyPermission(permissions);
-    
+
     if (!hasRequiredPermissions) {
       return <>{fallback}</>;
     }

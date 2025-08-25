@@ -4,6 +4,8 @@ import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
 import { AppModule } from "./app.module";
 import * as compression from "compression";
 import helmet from "helmet";
+import { LoggingMonitorInterceptor } from "./common/interceptors/logging-monitor.interceptor";
+import { LoggingService } from "./modules/logging/services/logging.service";
 
 /**
  * 启动应用程序
@@ -29,6 +31,10 @@ async function bootstrap() {
     })
   );
 
+  // 全局日志监控拦截器
+  // 注意：在生产环境中，建议通过模块注册拦截器而不是手动创建
+  // app.useGlobalInterceptors(new LoggingMonitorInterceptor(loggingService));
+
   // Swagger API文档配置
   const config = new DocumentBuilder()
     .setTitle("Monitor Server API")
@@ -41,7 +47,7 @@ async function bootstrap() {
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup("api-docs", app, document);
   app.enableCors();
-  const port = process.env.PORT || 3000;
+  const port = process.env.PORT || 3001;
   await app.listen(port);
 
   console.log(`🚀 Monitor Server is running on: http://localhost:${port}`);

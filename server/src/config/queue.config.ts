@@ -7,6 +7,7 @@ export const QUEUE_NAMES = {
   EMAIL_NOTIFICATION: 'email-notification',
   SOURCEMAP_PROCESSING: 'sourcemap-processing',
   ERROR_AGGREGATION: 'error-aggregation',
+  MONITOR_PROCESSING: 'monitor-processing',
 } as const;
 
 /**
@@ -33,6 +34,9 @@ export const JOB_TYPES = {
   // 错误聚合队列任务
   AGGREGATE_ERRORS: 'aggregate-errors',
   CLEANUP_OLD_ERRORS: 'cleanup-old-errors',
+  
+  // 监控数据处理队列任务
+  PROCESS_MONITOR_DATA: 'process-monitor-data',
 } as const;
 
 /**
@@ -127,6 +131,22 @@ export const QUEUE_OPTIONS = {
     settings: {
       stalledInterval: 60 * 1000,
       maxStalledCount: 1,
+    },
+  },
+  
+  [QUEUE_NAMES.MONITOR_PROCESSING]: {
+    defaultJobOptions: {
+      removeOnComplete: 500,
+      removeOnFail: 100,
+      attempts: 2,
+      backoff: {
+        type: 'exponential',
+        delay: 1000,
+      },
+    },
+    settings: {
+      stalledInterval: 30 * 1000,
+      maxStalledCount: 2,
     },
   },
 } as const;

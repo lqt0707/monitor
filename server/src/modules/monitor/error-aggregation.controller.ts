@@ -41,12 +41,13 @@ export class ErrorAggregationController {
   @ApiResponse({ status: 200, description: "查询成功" })
   async getErrorAggregations(@Query() queryDto: QueryErrorAggregationDto) {
     try {
-      const result =
+      const [data, total] =
         await this.errorAggregationService.findErrorAggregations(queryDto);
       return {
         success: true,
         message: "查询成功",
-        data: result,
+        data,
+        total,
       };
     } catch (error) {
       return {

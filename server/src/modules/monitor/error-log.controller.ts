@@ -105,11 +105,12 @@ export class ErrorLogController {
   @ApiResponse({ status: 200, description: "查询成功" })
   async getErrorLogs(@Query() queryDto: QueryErrorLogDto) {
     try {
-      const result = await this.errorLogService.findErrorLogs(queryDto);
+      const [data, total] = await this.errorLogService.findErrorLogs(queryDto);
       return {
         success: true,
         message: "查询成功",
-        data: result,
+        data,
+        total,
       };
     } catch (error) {
       return {

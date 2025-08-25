@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>源代码压缩包上传测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #ccc;
+            border-radius: 4px;
+            background: #fafafa;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #1890ff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background: #40a9ff;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background: #f9f9f9;
+            border-left: 4px solid #1890ff;
+        }
+        .success { border-left-color: #52c41a; }
+        .error { border-left-color: #ff4d4f; }
+        .loading {
+            text-align: center;
+            color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>源代码压缩包上传测试</h1>
+        
+        <div class="form-group">
+            <label for="projectId">项目ID:</label>
+            <input type="text" id="projectId" placeholder="输入项目ID" value="test-project">
+        </div>
+
+        <div class="form-group">
+            <label for="file">选择压缩包文件:</label>
+            <input type="file" id="file" accept=".zip,.tar,.gz,.rar,.7z">
+        </div>
+
+        <button id="uploadBtn" onclick="uploadFile()">上传压缩包</button>
+
+        <div id="result" class="result" style="display: none;">
+            <h3>上传结果:</h3>
+            <pre id="resultContent"></pre>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            上传中，请稍候...
+        </div>
+    </div>
+
+    <script>
+        async function uploadFile() {
+            const fileInput = document.getElementById('file');
+            const projectIdInput = document.getElementById('projectId');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const resultDiv = document.getElementById('result');
+            const resultContent = document.getElementById('resultContent');
+            const loadingDiv = document.getElementById('loading');
+
+            const file = fileInput.files[0];
+            const projectId = projectIdInput.value.trim();
+
+            if (!file) {
+                alert('请选择压缩包文件');
+                return;
+            }
+
+            if (!projectId) {
+                alert('请输入项目ID');
+                return;
+            }
+
+            // 显示加载中
+            loadingDiv.style.display = 'block';
+            resultDiv.style.display = 'none';
+            uploadBtn.disabled = true;
+
+            try {
+                // 读取文件为base64
+                const base64 = await readFileAsBase64(file);
+                
+                // 获取文件扩展名作为压缩包类型
+                const archiveType = file.name.split('.').pop()?.toLowerCase() || 'zip';
+
+                // 构建请求数据
+                const requestData = {
+                    projectId: projectId,
+                    archive: base64,
+                    fileName: file.name,
+                    archiveType: archiveType
+                };
+
+                // 发送请求
+                const response = await fetch('http://localhost:3001/api/source-code/upload-archive', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+
+                // 显示结果
+                resultDiv.className = response.ok ? 'result success' : 'result error';
+                resultContent.textContent = JSON.stringify(result, null, 2);
+                resultDiv.style.display = 'block';
+
+                if (!response.ok) {
+                    throw new Error(result.message || '上传失败');
+                }
+
+                console.log('上传成功:', result);
+
+            } catch (error) {
+                console.error('上传错误:', error);
+                resultDiv.className = 'result error';
+                resultContent.textContent = error.message;
+                resultDiv.style.display = 'block';
+            } finally {
+                loadingDiv.style.display = 'none';
+                uploadBtn.disabled = false;
+            }
+        }
+
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const result = e.target.result;
+                    // 移除data URL前缀
+                    const base64 = result.replace(/^data:.+;base64,/, '');
+                    resolve(base64);
+                };
+                reader.onerror = (e) => reject(e);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // 监听文件选择变化
+        document.getElementById('file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                console.log('选择的文件:', file.name, file.size, 'bytes');
+            }
+        });
+    </script>
+</body>
+</html>

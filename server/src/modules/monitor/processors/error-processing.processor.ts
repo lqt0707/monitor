@@ -9,6 +9,8 @@ import { ProjectConfig } from "../../project-config/entities/project-config.enti
 import { ErrorHashService } from "../services/error-hash.service";
 import { QueueService } from "../services/queue.service";
 import { AlertProcessor } from "../../email/processors/alert.processor";
+import { AlertRuleService } from "../../alert/services/alert-rule.service";
+import { AlertHistoryService } from "../../alert/services/alert-history.service";
 import { QUEUE_NAMES, JOB_TYPES } from "../../../config/queue.config";
 
 /**
@@ -28,7 +30,9 @@ export class ErrorProcessingProcessor {
     private projectConfigRepository: Repository<ProjectConfig>,
     private errorHashService: ErrorHashService,
     private queueService: QueueService,
-    private alertProcessor: AlertProcessor
+    private alertProcessor: AlertProcessor,
+    private alertRuleService: AlertRuleService,
+    private alertHistoryService: AlertHistoryService
   ) {}
 
   /**
@@ -235,6 +239,14 @@ export class ErrorProcessingProcessor {
       const shouldAlert = this.shouldSendAlert(errorAggregation, projectConfig);
 
       if (shouldAlert) {
+        // 检查告警规则
+        const triggeredRules = await this.alertRuleService.checkErrorCountAlerts(
+          errorAggregation.projectId,
+          errorAggregation.occurrenceCount
+        );
+
+        // 如果有触发的告警规则，发送告警
+      if (triggeredRules.length > 0) {
         // 直接调用AlertProcessor发送紧急告警
         const errorData = {
           projectId: errorAggregation.projectId,
@@ -243,11 +255,24 @@ export class ErrorProcessingProcessor {
           line: errorAggregation.sourceLine,
           column: errorAggregation.sourceColumn,
           level: errorAggregation.errorLevel,
+          triggeredRules: triggeredRules,
         };
+
+        // 记录告警历史
+        for (const rule of triggeredRules) {
+          await this.alertHistoryService.createAlertHistory(
+            rule,
+            projectConfig,
+            errorAggregation.occurrenceCount,
+            errorData.message,
+            errorData.level
+          );
+        }
 
         await this.alertProcessor.handleUrgentAlert(errorData);
 
-        this.logger.log(`紧急告警已处理: ${errorAggregation.errorHash}`);
+        this.logger.log(`紧急告警已处理: ${errorAggregation.errorHash}, 触发规则: ${triggeredRules.length}条`);
+      }
       }
     } catch (error) {
       this.logger.error(`检查告警失败: ${error.message}`, error.stack);

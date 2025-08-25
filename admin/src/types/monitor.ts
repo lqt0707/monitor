@@ -2,15 +2,15 @@
  * 监控数据相关类型定义
  */
 
-// 错误级别常量
+// 错误级别常量（与后端保持一致）
 export const ErrorLevel = {
-  INFO: 'info',
-  WARNING: 'warning',
-  ERROR: 'error',
-  CRITICAL: 'critical'
+  LOW: 1,
+  MEDIUM: 2,
+  HIGH: 3,
+  CRITICAL: 4,
 } as const;
 
-export type ErrorLevel = typeof ErrorLevel[keyof typeof ErrorLevel];
+export type ErrorLevel = (typeof ErrorLevel)[keyof typeof ErrorLevel];
 
 // 错误日志接口
 export interface ErrorLog {
@@ -23,11 +23,13 @@ export interface ErrorLog {
   sourceLine?: number;
   sourceColumn?: number;
   userAgent?: string;
-  url?: string;
+  pageUrl?: string;
   userId?: string;
   sessionId?: string;
   timestamp: string;
   isResolved?: boolean;
+  aiDiagnosis?: string;
+  aiFixSuggestion?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -42,7 +44,7 @@ export interface ErrorAggregation {
   sourceFile?: string;
   sourceLine?: number;
   sourceColumn?: number;
-  count: number;
+  occurrenceCount: number;
   firstOccurrence: string;
   lastOccurrence: string;
   aiDiagnosis?: string;
@@ -54,7 +56,8 @@ export interface ErrorAggregation {
 
 // 项目配置接口
 export interface ProjectConfig {
-  id: string;
+  id: number;
+  projectId: string;
   name: string;
   description?: string;
   domain: string;
@@ -117,7 +120,7 @@ export interface User {
   id: string;
   username: string;
   email: string;
-  role: 'admin' | 'user';
+  role: "admin" | "user";
   createdAt: string;
 }
 

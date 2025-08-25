@@ -98,7 +98,7 @@ export const fetchErrorAggregations = createAsyncThunk(
  */
 export const fetchErrorStats = createAsyncThunk(
   "error/fetchErrorStats",
-  async (projectId?: string, { rejectWithValue }) => {
+  async (projectId: string | undefined, { rejectWithValue }) => {
     try {
       const response = await apiClient.stats.getErrorStats(projectId);
       return response;
@@ -261,8 +261,17 @@ const errorSlice = createSlice({
       })
 
       // 获取趋势数据
+      .addCase(fetchErrorTrends.pending, (state) => {
+        state.statsLoading = true;
+        state.error = null;
+      })
       .addCase(fetchErrorTrends.fulfilled, (state, action) => {
+        state.statsLoading = false;
         state.errorTrends = action.payload;
+      })
+      .addCase(fetchErrorTrends.rejected, (state, action) => {
+        state.statsLoading = false;
+        state.error = action.payload as string;
       })
 
       // 标记已解决

@@ -23,6 +23,7 @@ import { QUEUE_NAMES } from '../config/queue.config';
       { name: QUEUE_NAMES.EMAIL_NOTIFICATION },
       { name: QUEUE_NAMES.SOURCEMAP_PROCESSING },
       { name: QUEUE_NAMES.ERROR_AGGREGATION },
+      { name: QUEUE_NAMES.MONITOR_PROCESSING },
     ),
   ],
   providers: [
@@ -42,6 +43,7 @@ import { QUEUE_NAMES } from '../config/queue.config';
     SourceMapService,
     ClickHouseService,
     ClickHouseConfig,
+    BullModule, // 导出BullModule以提供队列实例
   ],
 })
 export class ServicesModule {}

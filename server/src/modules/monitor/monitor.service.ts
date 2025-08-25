@@ -1,44 +1,78 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { MonitorData } from './entities/monitor-data.entity';
 import { ReportDataDto } from './dto/report-data.dto';
+import { QueueService } from './services/queue.service';
 
 /**
  * 监控数据服务
  */
 @Injectable()
 export class MonitorService {
+  private readonly logger = new Logger(MonitorService.name);
+
   constructor(
     @InjectRepository(MonitorData)
     private readonly monitorDataRepository: Repository<MonitorData>,
+    private readonly queueService: QueueService,
   ) {}
 
   /**
-   * 保存监控数据
+   * 保存监控数据（异步队列处理）
    * @param reportData 上报的监控数据
-   * @returns 保存的数据
+   * @returns 包含任务ID的响应
    */
-  async saveMonitorData(reportData: ReportDataDto): Promise<MonitorData> {
-    const monitorData = this.monitorDataRepository.create({
-      projectId: reportData.projectId,
-      type: reportData.type,
-      errorMessage: reportData.errorMessage,
-      errorStack: reportData.errorStack,
-      pageUrl: reportData.pageUrl,
-      userId: reportData.userId,
-      userAgent: reportData.userAgent,
-      deviceInfo: reportData.deviceInfo,
-      networkInfo: reportData.networkInfo,
-      performanceData: reportData.performanceData,
-      requestUrl: reportData.requestUrl,
-      requestMethod: reportData.requestMethod,
-      responseStatus: reportData.responseStatus,
-      duration: reportData.duration,
-      extraData: reportData.extraData,
-    });
+  async saveMonitorData(reportData: ReportDataDto): Promise<{ id: string; message: string }> {
+    try {
+      // 创建监控数据实体（不立即保存到数据库）
+      const monitorData = this.monitorDataRepository.create({
+        projectId: reportData.projectId,
+        type: reportData.type,
+        errorMessage: reportData.errorMessage,
+        errorStack: reportData.errorStack,
+        pageUrl: reportData.pageUrl,
+        userId: reportData.userId,
+        userAgent: reportData.userAgent,
+        deviceInfo: reportData.deviceInfo,
+        networkInfo: reportData.networkInfo,
+        performanceData: reportData.performanceData,
+        requestUrl: reportData.requestUrl,
+        requestMethod: reportData.requestMethod,
+        responseStatus: reportData.responseStatus,
+        duration: reportData.duration,
+        extraData: reportData.extraData,
+      });
 
-    return await this.monitorDataRepository.save(monitorData);
+      // 添加到监控数据处理队列
+      await this.queueService.addMonitorProcessingJob(monitorData);
+      
+      this.logger.log(`监控数据已添加到处理队列`);
+
+      return {
+        id: 'queued',
+        message: '监控数据已加入处理队列'
+      };
+    } catch (error) {
+      this.logger.error(`添加监控数据到队列失败: ${error.message}`);
+      throw error;
+    }
+  }
+
+  /**
+   * 直接保存监控数据（用于内部调用）
+   * @param monitorData 监控数据实体
+   * @returns 保存后的监控数据
+   */
+  async saveMonitorDataDirectly(monitorData: MonitorData): Promise<MonitorData> {
+    try {
+      const savedData = await this.monitorDataRepository.save(monitorData);
+      this.logger.log(`监控数据直接保存成功: ${savedData.id}`);
+      return savedData;
+    } catch (error) {
+      this.logger.error(`直接保存监控数据失败: ${error.message}`);
+      throw error;
+    }
   }
 
   /**

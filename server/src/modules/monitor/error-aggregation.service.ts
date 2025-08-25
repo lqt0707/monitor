@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, Between, MoreThan, LessThan } from "typeorm";
-import { ErrorAggregation } from "../../database/entities/error-aggregation.entity";
+import { ErrorAggregation } from "./entities/error-aggregation.entity";
 import { QueryErrorAggregationDto } from "./dto/query-error-aggregation.dto";
 import { UpdateErrorAggregationDto } from "./dto/update-error-aggregation.dto";
 import { QueueService } from "./services/queue.service";
@@ -24,7 +24,7 @@ export class ErrorAggregationService {
    * @param queryDto 查询参数
    * @returns 错误聚合列表和分页信息
    */
-  async findErrorAggregations(queryDto: QueryErrorAggregationDto) {
+  async findErrorAggregations(queryDto: QueryErrorAggregationDto): Promise<[ErrorAggregation[], number]> {
     const {
       projectId,
       type,
@@ -33,7 +33,7 @@ export class ErrorAggregationService {
       startDate,
       endDate,
       page = 1,
-      limit = 20,
+      pageSize = 20,
       sortBy = "lastSeen",
       sortOrder = "DESC",
     } = queryDto;
@@ -82,18 +82,12 @@ export class ErrorAggregationService {
     queryBuilder.orderBy(`aggregation.${sortBy}`, sortOrder as "ASC" | "DESC");
 
     // 分页
-    const offset = (page - 1) * limit;
-    queryBuilder.skip(offset).take(limit);
+    const offset = (page - 1) * pageSize;
+    queryBuilder.skip(offset).take(pageSize);
 
     const [items, total] = await queryBuilder.getManyAndCount();
 
-    return {
-      items,
-      total,
-      page,
-      limit,
-      totalPages: Math.ceil(total / limit),
-    };
+    return [items, total];
   }
 
   /**

@@ -7,6 +7,8 @@ import { ErrorAggregation } from "../modules/monitor/entities/error-aggregation.
 import { PerformanceMetric } from "../modules/monitor/entities/performance-metric.entity";
 import { ProjectConfig } from "../modules/project-config/entities/project-config.entity";
 import { User } from "../modules/auth/entities/user.entity";
+import { AlertRule } from "../modules/alert/entities/alert-rule.entity";
+import { AlertHistory } from "../modules/alert/entities/alert-history.entity";
 
 /**
  * MySQL数据库配置（存储元数据）
@@ -35,8 +37,10 @@ export class MySQLDatabaseConfig implements TypeOrmOptionsFactory {
         PerformanceMetric,
         ProjectConfig,
         User,
+        AlertRule,
+        AlertHistory,
       ],
-      synchronize: this.configService.get<boolean>("MYSQL_SYNCHRONIZE", true),
+      synchronize: this.configService.get<boolean>("MYSQL_SYNCHRONIZE", false),
       logging: this.configService.get<boolean>("MYSQL_LOGGING", false),
       migrations: ["dist/database/migrations/mysql/*.js"],
       migrationsRun: false,

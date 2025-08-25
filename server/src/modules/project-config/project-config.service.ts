@@ -116,6 +116,23 @@ export class ProjectConfigService {
   }
 
   /**
+   * 根据项目ID查询项目配置
+   * @param projectId 项目ID
+   * @returns 项目配置实体
+   */
+  async findByProjectId(projectId: string): Promise<ProjectConfig> {
+    const projectConfig = await this.projectConfigRepository.findOne({
+      where: { projectId },
+    });
+
+    if (!projectConfig) {
+      throw new NotFoundException(`项目ID ${projectId} 对应的项目配置不存在`);
+    }
+
+    return projectConfig;
+  }
+
+  /**
    * 更新项目配置
    * @param id 项目配置ID
    * @param updateProjectConfigDto 更新数据
@@ -148,9 +165,9 @@ export class ProjectConfigService {
    * @returns SourceMap配置信息
    */
   async getSourcemapConfig(
-    projectId: number
+    projectId: string
   ): Promise<{ enableSourcemap: boolean; sourcemapPath: string }> {
-    const projectConfig = await this.findOne(projectId);
+    const projectConfig = await this.findByProjectId(projectId);
     return {
       enableSourcemap: projectConfig.enableSourcemap,
       sourcemapPath: projectConfig.sourcemapPath,
@@ -165,11 +182,12 @@ export class ProjectConfigService {
    * @returns 更新后的项目配置
    */
   async updateSourcemapConfig(
-    projectId: number,
+    projectId: string,
     enableSourcemap: boolean,
     sourcemapPath: string
   ): Promise<ProjectConfig> {
-    return await this.update(projectId, {
+    const config = await this.findByProjectId(projectId);
+    return await this.update(config.id, {
       enableSourcemap,
       sourcemapPath,
     });

@@ -4,7 +4,11 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from "typeorm";
+// 使用接口引用而不是具体类引用
+import type { AlertRule } from "../../alert/entities/alert-rule.entity";
+import type { AlertHistory } from "../../alert/entities/alert-history.entity";
 
 /**
  * 项目配置实体类
@@ -97,4 +101,16 @@ export class ProjectConfig {
    */
   @UpdateDateColumn({ name: "updated_at" })
   updatedAt: Date;
+
+  /**
+   * 告警规则列表
+   */
+  @OneToMany('AlertRule', (alertRule: any) => alertRule.project)
+  alertRules: AlertRule[];
+
+  /**
+   * 告警历史记录
+   */
+  @OneToMany('AlertHistory', (alertHistory: any) => alertHistory.projectConfig)
+  alertHistories: AlertHistory[];
 }

@@ -1,6 +1,13 @@
-import { IsOptional, IsBoolean, IsInt, IsString, Min, Max } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
-import { ApiPropertyOptional } from '@nestjs/swagger';
+import {
+  IsOptional,
+  IsBoolean,
+  IsInt,
+  IsString,
+  Min,
+  Max,
+} from "class-validator";
+import { Type, Transform } from "class-transformer";
+import { ApiPropertyOptional } from "@nestjs/swagger";
 
 /**
  * 查询项目DTO
@@ -9,7 +16,7 @@ export class QueryProjectDto {
   /**
    * 团队ID
    */
-  @ApiPropertyOptional({ description: '团队ID' })
+  @ApiPropertyOptional({ description: "团队ID" })
   @IsOptional()
   @IsString()
   teamId?: string;
@@ -17,7 +24,7 @@ export class QueryProjectDto {
   /**
    * 负责人ID
    */
-  @ApiPropertyOptional({ description: '负责人ID' })
+  @ApiPropertyOptional({ description: "负责人ID" })
   @IsOptional()
   @IsString()
   ownerId?: string;
@@ -25,25 +32,25 @@ export class QueryProjectDto {
   /**
    * 是否启用
    */
-  @ApiPropertyOptional({ description: '是否启用' })
+  @ApiPropertyOptional({ description: "是否启用" })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
+  @Transform(({ value }) => value === "true")
   @IsBoolean()
   isActive?: boolean;
 
   /**
    * 是否暂停
    */
-  @ApiPropertyOptional({ description: '是否暂停' })
+  @ApiPropertyOptional({ description: "是否暂停" })
   @IsOptional()
-  @Transform(({ value }) => value === 'true')
+  @Transform(({ value }) => value === "true")
   @IsBoolean()
   isPaused?: boolean;
 
   /**
    * 页码
    */
-  @ApiPropertyOptional({ description: '页码', default: 1, minimum: 1 })
+  @ApiPropertyOptional({ description: "页码", default: 1, minimum: 1 })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
@@ -53,35 +60,40 @@ export class QueryProjectDto {
   /**
    * 每页数量
    */
-  @ApiPropertyOptional({ description: '每页数量', default: 20, minimum: 1, maximum: 100 })
+  @ApiPropertyOptional({
+    description: "每页数量",
+    default: 20,
+    minimum: 1,
+    maximum: 100,
+  })
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
   @Max(100)
-  limit?: number = 20;
+  pageSize?: number = 20;
 
   /**
    * 排序字段
    */
-  @ApiPropertyOptional({ 
-    description: '排序字段', 
-    default: 'createdAt',
-    enum: ['createdAt', 'updatedAt', 'projectName', 'projectId']
+  @ApiPropertyOptional({
+    description: "排序字段",
+    default: "createdAt",
+    enum: ["createdAt", "updatedAt", "projectName", "projectId"],
   })
   @IsOptional()
   @IsString()
-  sortBy?: string = 'createdAt';
+  sortBy?: string = "createdAt";
 
   /**
    * 排序顺序
    */
-  @ApiPropertyOptional({ 
-    description: '排序顺序', 
-    default: 'DESC',
-    enum: ['ASC', 'DESC']
+  @ApiPropertyOptional({
+    description: "排序顺序",
+    default: "DESC",
+    enum: ["ASC", "DESC"],
   })
   @IsOptional()
   @IsString()
-  sortOrder?: 'ASC' | 'DESC' = 'DESC';
+  sortOrder?: "ASC" | "DESC" = "DESC";
 }

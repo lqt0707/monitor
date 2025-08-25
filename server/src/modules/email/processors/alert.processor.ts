@@ -18,7 +18,9 @@ export class AlertProcessor {
     private readonly emailService: EmailService,
     private readonly projectConfigService: ProjectConfigService,
     @InjectRepository(ErrorAggregation)
-    private readonly errorAggregationRepository: Repository<ErrorAggregation>
+    private readonly errorAggregationRepository: Repository<ErrorAggregation>,
+    @InjectRepository(ProjectConfig)
+    private readonly projectConfigRepository: Repository<ProjectConfig>
   ) {}
 
   /**
@@ -27,12 +29,12 @@ export class AlertProcessor {
    */
   async handleUrgentAlert(errorData: any): Promise<void> {
     try {
-      const { projectId, message, source, line, column, level } = errorData;
+      const { projectId, message, source, line, column, level, triggeredRules } = errorData;
 
       // 获取项目配置
-      const projectConfig = await this.projectConfigService.findOne(
-        parseInt(projectId)
-      );
+      const projectConfig = await this.projectConfigRepository.findOne({
+        where: { projectId }
+      });
 
       if (!this.shouldSendUrgentAlert(projectConfig, level)) {
         return;
@@ -48,11 +50,15 @@ export class AlertProcessor {
         level
       );
 
-      // 发送紧急告警邮件
-      await this.emailService.sendErrorAlert(errorAggregation, projectConfig);
+      // 发送紧急告警邮件（包含触发的告警规则信息）
+      await this.emailService.sendErrorAlert(
+        errorAggregation, 
+        projectConfig,
+        triggeredRules
+      );
 
       this.logger.log(
-        `已发送紧急错误告警邮件: 项目=${projectConfig.name}, 错误=${message}`
+        `已发送紧急错误告警邮件: 项目=${projectConfig.name}, 错误=${message}, 触发规则: ${triggeredRules?.length || 0}条`
       );
     } catch (error) {
       this.logger.error(`处理紧急错误告警失败: ${error.message}`);
@@ -65,9 +71,9 @@ export class AlertProcessor {
    */
   async handleSummaryAlert(projectId: string): Promise<void> {
     try {
-      const projectConfig = await this.projectConfigService.findOne(
-        parseInt(projectId)
-      );
+      const projectConfig = await this.projectConfigRepository.findOne({
+        where: { projectId }
+      });
 
       if (!projectConfig.alertEmail) {
         return;

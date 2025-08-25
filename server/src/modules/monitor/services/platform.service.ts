@@ -1,10 +1,10 @@
-import { Injectable, Logger, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Platform } from '../entities/platform.entity';
-import { CreatePlatformDto } from '../dto/create-platform.dto';
-import { UpdatePlatformDto } from '../dto/update-platform.dto';
-import { QueryPlatformDto } from '../dto/query-platform.dto';
+import { Injectable, Logger, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { Platform } from "../entities/platform.entity";
+import { CreatePlatformDto } from "../dto/create-platform.dto";
+import { UpdatePlatformDto } from "../dto/update-platform.dto";
+import { QueryPlatformDto } from "../dto/query-platform.dto";
 
 /**
  * 平台管理服务
@@ -15,7 +15,7 @@ export class PlatformService {
 
   constructor(
     @InjectRepository(Platform)
-    private platformRepository: Repository<Platform>,
+    private platformRepository: Repository<Platform>
   ) {}
 
   /**
@@ -28,7 +28,7 @@ export class PlatformService {
       const platform = this.platformRepository.create(createPlatformDto);
       return await this.platformRepository.save(platform);
     } catch (error) {
-      this.logger.error('创建平台失败', error);
+      this.logger.error("创建平台失败", error);
       throw error;
     }
   }
@@ -43,30 +43,30 @@ export class PlatformService {
       platformCategory,
       isActive,
       page = 1,
-      limit = 20,
-      sortBy = 'createdAt',
-      sortOrder = 'DESC',
+      pageSize = 20,
+      sortBy = "createdAt",
+      sortOrder = "DESC",
     } = queryDto;
 
-    const queryBuilder = this.platformRepository.createQueryBuilder('platform');
+    const queryBuilder = this.platformRepository.createQueryBuilder("platform");
 
     // 添加查询条件
     if (platformCategory) {
-      queryBuilder.andWhere('platform.platformCategory = :platformCategory', {
+      queryBuilder.andWhere("platform.platformCategory = :platformCategory", {
         platformCategory,
       });
     }
 
     if (isActive !== undefined) {
-      queryBuilder.andWhere('platform.isActive = :isActive', { isActive });
+      queryBuilder.andWhere("platform.isActive = :isActive", { isActive });
     }
 
     // 排序
     queryBuilder.orderBy(`platform.${sortBy}`, sortOrder);
 
     // 分页
-    const skip = (page - 1) * limit;
-    queryBuilder.skip(skip).take(limit);
+    const skip = (page - 1) * pageSize;
+    queryBuilder.skip(skip).take(pageSize);
 
     const [platforms, total] = await queryBuilder.getManyAndCount();
 
@@ -74,8 +74,8 @@ export class PlatformService {
       data: platforms,
       total,
       page,
-      limit,
-      totalPages: Math.ceil(total / limit),
+      pageSize,
+      totalPages: Math.ceil(total / pageSize),
     };
   }
 
@@ -113,13 +113,16 @@ export class PlatformService {
    * @param updatePlatformDto 更新平台DTO
    * @returns 更新后的平台
    */
-  async update(id: number, updatePlatformDto: UpdatePlatformDto): Promise<Platform> {
+  async update(
+    id: number,
+    updatePlatformDto: UpdatePlatformDto
+  ): Promise<Platform> {
     try {
       const platform = await this.findOne(id);
       Object.assign(platform, updatePlatformDto);
       return await this.platformRepository.save(platform);
     } catch (error) {
-      this.logger.error('更新平台失败', error);
+      this.logger.error("更新平台失败", error);
       throw error;
     }
   }
@@ -133,7 +136,7 @@ export class PlatformService {
       const platform = await this.findOne(id);
       await this.platformRepository.remove(platform);
     } catch (error) {
-      this.logger.error('删除平台失败', error);
+      this.logger.error("删除平台失败", error);
       throw error;
     }
   }
@@ -150,7 +153,7 @@ export class PlatformService {
       platform.isActive = isActive;
       return await this.platformRepository.save(platform);
     } catch (error) {
-      this.logger.error('切换平台状态失败', error);
+      this.logger.error("切换平台状态失败", error);
       throw error;
     }
   }
@@ -168,23 +171,23 @@ export class PlatformService {
 
       // 按分类统计
       const categoryStats = await this.platformRepository
-        .createQueryBuilder('platform')
-        .select('platform.platformCategory', 'category')
-        .addSelect('COUNT(*)', 'count')
-        .groupBy('platform.platformCategory')
+        .createQueryBuilder("platform")
+        .select("platform.platformCategory", "category")
+        .addSelect("COUNT(*)", "count")
+        .groupBy("platform.platformCategory")
         .getRawMany();
 
       return {
         total,
         activeCount,
         inactiveCount: total - activeCount,
-        categoryStats: categoryStats.map(item => ({
+        categoryStats: categoryStats.map((item) => ({
           category: item.category,
           count: parseInt(item.count),
         })),
       };
     } catch (error) {
-      this.logger.error('获取平台统计信息失败', error);
+      this.logger.error("获取平台统计信息失败", error);
       throw error;
     }
   }
@@ -206,7 +209,7 @@ export class PlatformService {
         success: true,
       };
     } catch (error) {
-      this.logger.error('批量更新平台状态失败', error);
+      this.logger.error("批量更新平台状态失败", error);
       throw error;
     }
   }

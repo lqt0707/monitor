@@ -18,6 +18,24 @@ import type {
   ErrorStats,
 } from "../types/monitor";
 
+import type {
+  UploadSourceCodeRequest,
+  UploadSourceCodeResponse,
+  BatchUploadSourceCodeRequest,
+  BatchUploadSourceCodeResponse,
+  UploadSourceCodeArchiveRequest,
+  UploadSourceCodeArchiveResponse,
+} from "../types/source-code";
+
+import type {
+  UploadSourcemapRequest,
+  UploadSourcemapResponse,
+  UploadSourcemapArchiveRequest,
+  UploadSourcemapArchiveResponse,
+  BatchUploadSourcemapRequest,
+  BatchUploadSourcemapResponse,
+} from "../types/sourcemap";
+
 // API 基础配置
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -119,7 +137,7 @@ class ApiClient {
     login: async (loginForm: LoginForm): Promise<LoginResponse> => {
       const response = await this.instance.post<
         ApiResponse<{ access_token: string; user: any }>
-      >("/auth/login", loginForm);
+      >("/api/auth/login", loginForm);
       // 将服务器返回的 access_token 映射为前端期望的 token 字段
       return {
         token: response.data.data.access_token,
@@ -131,7 +149,7 @@ class ApiClient {
      * 用户登出
      */
     logout: async (): Promise<void> => {
-      await this.instance.post("/auth/logout");
+      await this.instance.post("/api/auth/logout");
       localStorage.removeItem("token");
       localStorage.removeItem("user");
     },
@@ -150,11 +168,14 @@ class ApiClient {
       params: QueryParams
     ): Promise<{ data: ErrorLog[]; total: number }> => {
       const response = await this.instance.get<
-        ApiResponse<{ data: ErrorLog[]; total: number }>
+        ApiResponse<ErrorLog[]>
       >("/api/error-logs", {
         params,
       });
-      return response.data.data;
+      return {
+        data: response.data.data,
+        total: response.data.total || 0,
+      };
     },
 
     /**
@@ -183,11 +204,14 @@ class ApiClient {
       params: QueryParams
     ): Promise<{ data: ErrorAggregation[]; total: number }> => {
       const response = await this.instance.get<
-        ApiResponse<{ data: ErrorAggregation[]; total: number }>
+        ApiResponse<ErrorAggregation[]>
       >("/api/error-aggregations", {
         params,
       });
-      return response.data.data;
+      return {
+        data: response.data.data,
+        total: response.data.total || 0,
+      };
     },
 
     /**
@@ -216,6 +240,14 @@ class ApiClient {
      */
     reopen: async (id: number): Promise<void> => {
       await this.instance.patch(`/api/error-aggregations/${id}/reopen`);
+    },
+
+    /**
+     * 重新分析错误（AI诊断）
+     * @param id 错误聚合ID
+     */
+    reanalyze: async (id: number): Promise<void> => {
+      await this.instance.post(`/api/error-aggregations/${id}/reanalyze`);
     },
   };
 
@@ -382,6 +414,94 @@ class ApiClient {
      */
     testSummary: async (projectId: string): Promise<void> => {
       await this.instance.post("/api/email/summary/test", { projectId });
+    },
+  };
+
+  /**
+   * 源代码上传和分析相关接口
+   */
+  sourceCode = {
+    /**
+     * 上传单个源代码文件
+     * @param data 上传请求数据
+     * @returns 上传和分析结果
+     */
+    upload: async (data: UploadSourceCodeRequest): Promise<UploadSourceCodeResponse> => {
+      const response = await this.instance.post<ApiResponse<UploadSourceCodeResponse>>(
+        "/api/source-code/upload",
+        data
+      );
+      return response.data.data;
+    },
+
+    /**
+     * 批量上传源代码文件
+     * @param data 批量上传请求数据
+     * @returns 批量上传结果
+     */
+    batchUpload: async (data: BatchUploadSourceCodeRequest): Promise<BatchUploadSourceCodeResponse> => {
+      const response = await this.instance.post<ApiResponse<BatchUploadSourceCodeResponse>>(
+        "/api/source-code/batch-upload",
+        data
+      );
+      return response.data.data;
+    },
+
+    /**
+     * 上传源代码压缩包
+     * @param data 压缩包上传数据
+     * @returns 解压和处理结果
+     */
+    uploadArchive: async (data: UploadSourceCodeArchiveRequest): Promise<UploadSourceCodeArchiveResponse> => {
+      const response = await this.instance.post<ApiResponse<UploadSourceCodeArchiveResponse>>(
+        "/api/source-code/upload-archive",
+        data
+      );
+      return response.data.data;
+    },
+  };
+
+  /**
+   * Sourcemap上传相关接口
+   */
+  sourcemapUpload = {
+    /**
+     * 上传单个Sourcemap文件
+     * @param data Sourcemap上传数据
+     * @returns 上传结果
+     */
+    upload: async (data: UploadSourcemapRequest): Promise<UploadSourcemapResponse> => {
+      const response = await this.instance.post<ApiResponse<UploadSourcemapResponse>>(
+        "/api/sourcemap-upload/upload",
+        data
+      );
+      return response.data.data;
+    },
+
+    /**
+     * 上传Sourcemap压缩包
+     * @param data 压缩包上传数据
+     * @returns 解压和处理结果
+     */
+    uploadArchive: async (data: UploadSourcemapArchiveRequest): Promise<UploadSourcemapArchiveResponse> => {
+      const response = await this.instance.post<ApiResponse<UploadSourcemapArchiveResponse>>(
+        "/api/sourcemap-upload/upload-archive",
+        data
+      );
+      return response.data.data;
+    },
+
+    /**
+     * 批量上传Sourcemap文件
+     * @param data 多个Sourcemap上传数据
+     * @returns 批量处理结果
+     */
+    batchUpload: async (data: BatchUploadSourcemapRequest): Promise<BatchUploadSourcemapResponse> => {
+      const response = await this.instance.post<ApiResponse<BatchUploadSourcemapResponse>>(
+        "/api/sourcemap-upload/batch-upload",
+        data
+      );
+      return response.data.data;
     },
   };
 }

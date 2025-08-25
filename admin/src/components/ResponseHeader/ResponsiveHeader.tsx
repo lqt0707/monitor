@@ -32,6 +32,8 @@ import ResponsiveNotification from "../ResponsiveNotification";
 import ResponsiveSearch from "../ResponsiveSearch";
 import type { MenuProps } from "antd";
 import "./index.css";
+import { logoutAsync } from "../../store/slices/authSlice";
+import { useAppDispatch } from "../../hooks/redux";
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -71,7 +73,7 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
   const [darkMode, setDarkMode] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(5);
-
+  const dispatch = useAppDispatch();
   /**
    * 处理移动端菜单切换
    */
@@ -187,6 +189,17 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
       label: "系统设置",
     },
   ];
+
+  /**
+   * 处理退出登录
+   */
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutAsync()).unwrap();
+    } catch (error) {
+      console.error("退出登录失败:", error);
+    }
+  };
 
   return (
     <>
@@ -367,7 +380,7 @@ const ResponsiveHeader: React.FC<ResponsiveHeaderProps> = ({
               icon={<LogoutOutlined />}
               danger
               style={{ justifyContent: "flex-start", padding: "8px 0" }}
-              onClick={() => console.log("退出登录")}
+              onClick={() => handleLogout()}
             >
               退出登录
             </Button>

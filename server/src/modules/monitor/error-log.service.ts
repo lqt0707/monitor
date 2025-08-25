@@ -1,7 +1,7 @@
 import { Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { ErrorLog } from "../../database/entities/error-log.entity";
+import { ErrorLog } from "./entities/error-log.entity";
 import { CreateErrorLogDto } from "./dto/create-error-log.dto";
 import { QueryErrorLogDto } from "./dto/query-error-log.dto";
 import { ClickHouseService } from "../clickhouse/services/clickhouse.service";
@@ -196,7 +196,7 @@ export class ErrorLogService {
    */
   async findErrorLogs(
     query: QueryErrorLogDto
-  ): Promise<{ data: ErrorLog[]; total: number }> {
+  ): Promise<[ErrorLog[], number]> {
     try {
       const queryBuilder =
         this.errorLogRepository.createQueryBuilder("errorLog");
@@ -250,12 +250,12 @@ export class ErrorLogService {
 
       // 分页
       const page = query.page || 1;
-      const limit = query.limit || 20;
-      queryBuilder.skip((page - 1) * limit).take(limit);
+      const pageSize = query.pageSize || 20;
+      queryBuilder.skip((page - 1) * pageSize).take(pageSize);
 
       const [data, total] = await queryBuilder.getManyAndCount();
 
-      return { data, total };
+      return [data, total];
     } catch (error) {
       this.logger.error("查询错误日志失败", error);
       throw error;

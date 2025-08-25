@@ -3,12 +3,12 @@
  * 管理用户登录状态和用户信息
  */
 
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { PayloadAction } from '@reduxjs/toolkit';
-import { message } from 'antd';
-import apiClient from '../../services/api';
-import { JWTUtils } from '../../utils/jwt';
-import type { User, LoginForm, LoginResponse } from '../../types/monitor';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import type { PayloadAction } from "@reduxjs/toolkit";
+import { message } from "antd";
+import apiClient from "../../services/api";
+import { JWTUtils } from "../../utils/jwt";
+import type { User, LoginForm, LoginResponse } from "../../types/monitor";
 
 // 认证状态接口
 interface AuthState {
@@ -21,15 +21,17 @@ interface AuthState {
 
 // 从 localStorage 获取初始状态
 const getInitialState = (): AuthState => {
-  const storedUser = localStorage.getItem('user');
+  const storedUser = localStorage.getItem("user");
   const storedToken = JWTUtils.getStoredToken();
-  
+
   // 检查 token 是否有效
-  const isTokenValid = storedToken ? !JWTUtils.isTokenExpired(storedToken) : false;
-  
+  const isTokenValid = storedToken
+    ? !JWTUtils.isTokenExpired(storedToken)
+    : false;
+
   // 如果 token 无效，清除存储的数据
   if (storedToken && !isTokenValid) {
-    localStorage.removeItem('user');
+    localStorage.removeItem("user");
     JWTUtils.removeToken();
     return {
       user: null,
@@ -39,7 +41,7 @@ const getInitialState = (): AuthState => {
       error: null,
     };
   }
-  
+
   return {
     user: storedUser ? JSON.parse(storedUser) : null,
     token: storedToken,
@@ -58,13 +60,13 @@ const initialState: AuthState = getInitialState();
  * @returns 登录响应
  */
 export const loginAsync = createAsyncThunk(
-  'auth/login',
+  "auth/login",
   async (loginForm: LoginForm, { rejectWithValue }) => {
     try {
       const response = await apiClient.auth.login(loginForm);
       return response;
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || '登录失败';
+      const errorMessage = error.response?.data?.message || "登录失败";
       message.error(errorMessage);
       return rejectWithValue(errorMessage);
     }
@@ -75,13 +77,13 @@ export const loginAsync = createAsyncThunk(
  * 异步登出操作
  */
 export const logoutAsync = createAsyncThunk(
-  'auth/logout',
+  "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
       await apiClient.auth.logout();
     } catch (error: any) {
       // 即使登出失败，也要清除本地状态
-      console.error('Logout error:', error);
+      console.error("Logout error:", error);
     }
   }
 );
@@ -90,7 +92,7 @@ export const logoutAsync = createAsyncThunk(
  * 认证状态 Slice
  */
 const authSlice = createSlice({
-  name: 'auth',
+  name: "auth",
   initialState,
   reducers: {
     /**
@@ -107,7 +109,7 @@ const authSlice = createSlice({
      */
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
-      localStorage.setItem('user', JSON.stringify(action.payload));
+      localStorage.setItem("user", JSON.stringify(action.payload));
     },
 
     /**
@@ -118,8 +120,8 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
-      localStorage.removeItem('user');
-      localStorage.removeItem('token');
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
     },
   },
   extraReducers: (builder) => {
@@ -129,19 +131,22 @@ const authSlice = createSlice({
         state.loading = true;
         state.error = null;
       })
-      .addCase(loginAsync.fulfilled, (state, action: PayloadAction<LoginResponse>) => {
-        state.loading = false;
-        state.user = action.payload.user;
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
-        state.error = null;
-        
-        // 保存到本地存储
-        localStorage.setItem('user', JSON.stringify(action.payload.user));
-        JWTUtils.storeToken(action.payload.token);
-        
-        message.success('登录成功');
-      })
+      .addCase(
+        loginAsync.fulfilled,
+        (state, action: PayloadAction<LoginResponse>) => {
+          state.loading = false;
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          state.isAuthenticated = true;
+          state.error = null;
+
+          // 保存到本地存储
+          localStorage.setItem("user", JSON.stringify(action.payload.user));
+          JWTUtils.storeToken(action.payload.token);
+
+          message.success("登录成功");
+        }
+      )
       .addCase(loginAsync.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
@@ -157,12 +162,12 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
         state.error = null;
-        
+
         // 清除本地存储
-        localStorage.removeItem('user');
+        localStorage.removeItem("user");
         JWTUtils.removeToken();
-        
-        message.success('已退出登录');
+
+        message.success("已退出登录");
       })
       .addCase(logoutAsync.rejected, (state) => {
         state.loading = false;
@@ -170,7 +175,7 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
-        localStorage.removeItem('user');
+        localStorage.removeItem("user");
         JWTUtils.removeToken();
       });
   },

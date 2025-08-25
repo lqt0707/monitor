@@ -1,8 +1,9 @@
-import { Module } from '@nestjs/common';
+import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ProjectConfig } from './entities/project-config.entity';
 import { ProjectConfigService } from './project-config.service';
 import { ProjectConfigController } from './project-config.controller';
+import { AlertModule } from '../alert/alert.module';
 
 /**
  * 项目配置模块
@@ -11,6 +12,7 @@ import { ProjectConfigController } from './project-config.controller';
 @Module({
   imports: [
     TypeOrmModule.forFeature([ProjectConfig]),
+    forwardRef(() => AlertModule),
   ],
   controllers: [ProjectConfigController],
   providers: [ProjectConfigService],

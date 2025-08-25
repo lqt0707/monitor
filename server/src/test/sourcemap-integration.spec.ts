@@ -113,10 +113,10 @@ describe('SourceMap Integration Test', () => {
         },
         {
           provide: SourcemapProcessingProcessor,
-          useFactory: (projectConfigService, errorLogRepo, errorAggRepo, queueService, sourcemapService) => {
-            return new SourcemapProcessingProcessor(projectConfigService, errorLogRepo, errorAggRepo, queueService, sourcemapService);
+          useFactory: (projectConfigService, errorLogRepo, errorAggRepo, queueService, sourcemapService, projectConfigRepo) => {
+            return new SourcemapProcessingProcessor(projectConfigService, errorLogRepo, errorAggRepo, queueService, sourcemapService, projectConfigRepo);
           },
-          inject: [ProjectConfigService, getRepositoryToken(ErrorLog), getRepositoryToken(ErrorAggregation), QueueService, SourceMapService],
+          inject: [ProjectConfigService, getRepositoryToken(ErrorLog), getRepositoryToken(ErrorAggregation), QueueService, SourceMapService, getRepositoryToken(ProjectConfig)],
         },
       ],
     }).compile();
@@ -154,7 +154,7 @@ describe('SourceMap Integration Test', () => {
 
     it('应该成功获取SourceMap配置', async () => {
       const projectConfig = await projectConfigService.create(testProjectConfig);
-      const sourcemapConfig = await projectConfigService.getSourcemapConfig(projectConfig.id);
+      const sourcemapConfig = await projectConfigService.getSourcemapConfig(projectConfig.projectId);
       
       expect(sourcemapConfig.enableSourcemap).toBe(true);
       expect(sourcemapConfig.sourcemapPath).toBe(testProjectConfig.sourcemapPath);
@@ -163,7 +163,7 @@ describe('SourceMap Integration Test', () => {
     it('应该成功更新SourceMap配置', async () => {
       const projectConfig = await projectConfigService.create(testProjectConfig);
       const updatedConfig = await projectConfigService.updateSourcemapConfig(
-        projectConfig.id,
+        projectConfig.projectId,
         false,
         '/new/path'
       );
@@ -309,7 +309,7 @@ describe('SourceMap Integration Test', () => {
       });
       
       // 3. 验证SourceMap配置
-      const sourcemapConfig = await projectConfigService.getSourcemapConfig(projectConfig.id);
+      const sourcemapConfig = await projectConfigService.getSourcemapConfig(projectConfig.projectId);
       expect(sourcemapConfig.enableSourcemap).toBe(true);
       expect(sourcemapConfig.sourcemapPath).toBe(testProjectConfig.sourcemapPath);
       

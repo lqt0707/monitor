@@ -16,13 +16,11 @@ import zhCN from "antd/locale/zh_CN";
 import { store } from "./store";
 import ErrorBoundary from "./components/ErrorBoundary";
 import MainLayout from "./layouts/MainLayout";
-import Login from "./pages/Login";
-import Dashboard from "./pages/Dashboard";
-import ErrorMonitor from "./pages/ErrorMonitor";
-import ErrorLogs from "./pages/ErrorLogs";
-import ErrorAggregations from "./pages/ErrorAggregations";
-import ProjectManagement from "./pages/ProjectManagement";
-import ProjectConfig from "./pages/ProjectConfig";
+import Login from "./pages/auth/Login";
+import Dashboard from "./pages/dashboard/Dashboard";
+import ErrorLogs from "./pages/errors/ErrorLogs";
+import ErrorAggregations from "./pages/errors/ErrorAggregations";
+import ProjectManagement from "./pages/projects/ProjectManagement";
 import UserManagement from "./pages/UserManagement";
 import PermissionManagement from "./pages/PermissionManagement";
 import StatisticsReport from "./pages/StatisticsReport";
@@ -99,7 +97,6 @@ const App: React.FC = () => {
                         <Route path="/dashboard" element={<Dashboard />} />
 
                         {/* 错误监控 */}
-                        <Route path="/errors" element={<ErrorMonitor />} />
                         <Route path="/errors/logs" element={<ErrorLogs />} />
                         <Route
                           path="/errors/aggregations"
@@ -108,18 +105,8 @@ const App: React.FC = () => {
 
                         {/* 项目管理 */}
                         <Route
-                          path="/projects"
-                          element={<ProjectManagement />}
-                        />
-                        <Route
                           path="/projects/list"
                           element={<ProjectManagement />}
-                        />
-
-                        {/* 项目配置 */}
-                        <Route
-                          path="/projects/:projectId/config"
-                          element={<ProjectConfig />}
                         />
 
                         {/* 统计报表 */}

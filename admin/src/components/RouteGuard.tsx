@@ -3,11 +3,11 @@
  * 用于保护需要特定权限的路由
  */
 
-import React from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
-import { Result, Button } from 'antd';
-import { usePermission } from '../hooks/usePermission';
-import type { User } from '../types/monitor';
+import React from "react";
+import { Navigate, useLocation } from "react-router-dom";
+import { Result, Button } from "antd";
+import type { User } from "../types/monitor";
+import usePermission from "../hooks/usePermission";
 
 /**
  * 路由守卫属性接口
@@ -22,7 +22,7 @@ interface RouteGuardProps {
   /** 是否需要所有权限 */
   requireAll?: boolean;
   /** 需要的角色 */
-  role?: 'admin' | 'user';
+  role?: "admin" | "user";
   /** 自定义检查函数 */
   customCheck?: (user: User | null) => boolean;
   /** 重定向路径 */
@@ -41,7 +41,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
   requireAll = false,
   role,
   customCheck,
-  redirectTo = '/dashboard',
+  redirectTo = "/dashboard",
 }) => {
   const location = useLocation();
   const {
@@ -80,7 +80,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
       <Result
         status="403"
         title="403"
-        subTitle={`此页面需要 ${role === 'admin' ? '管理员' : '用户'} 权限。`}
+        subTitle={`此页面需要 ${role === "admin" ? "管理员" : "用户"} 权限。`}
         extra={
           <Button type="primary" onClick={() => window.history.back()}>
             返回上一页
@@ -111,7 +111,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({
     const hasRequiredPermissions = requireAll
       ? hasAllPermissions(permissions)
       : hasAnyPermission(permissions);
-    
+
     if (!hasRequiredPermissions) {
       return (
         <Result
