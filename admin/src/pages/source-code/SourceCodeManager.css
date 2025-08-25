@@ -1,0 +1,136 @@
+.source-code-manager {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 16px;
+}
+
+.source-code-header-card {
+    margin-bottom: 0;
+}
+
+.source-code-header-actions {
+    margin-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.source-code-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.source-code-tabs {
+    height: 100%;
+}
+
+.source-code-tabs .ant-tabs-content {
+    height: 100%;
+}
+
+.source-code-tabs .ant-tabs-tabpane {
+    height: 100%;
+    overflow: auto;
+}
+
+.source-code-explorer {
+    display: flex;
+    height: calc(100vh - 250px);
+    gap: 16px;
+}
+
+.file-tree-card {
+    width: 300px;
+    height: 100%;
+    overflow: auto;
+}
+
+.file-tree-card .ant-card-body {
+    height: calc(100% - 57px);
+    overflow: auto;
+    padding: 12px;
+}
+
+.tree-loading,
+.versions-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+.file-content-container {
+    flex: 1;
+    height: 100%;
+    overflow: hidden;
+}
+
+.empty-file-card {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-file-card .ant-card-body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.versions-card {
+    height: calc(100vh - 250px);
+    overflow: auto;
+}
+
+.versions-card .ant-card-body {
+    padding: 12px;
+}
+
+.versions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.version-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.3s;
+}
+
+.version-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.active-version {
+    border-left: 4px solid #52c41a;
+    background-color: #f6ffed;
+}
+
+.version-info {
+    flex: 1;
+}
+
+.version-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.version-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.version-actions {
+    display: flex;
+    align-items: center;
+}

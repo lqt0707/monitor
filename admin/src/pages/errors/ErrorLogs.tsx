@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Table,
   Card,
@@ -85,6 +86,7 @@ const formatTimestamp = (timestamp: string): string => {
  */
 const ErrorLogs: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { errorLogs, errorLogsTotal, errorLogsLoading, error } = useAppSelector(
     (state: any) => state.error
   );
@@ -278,7 +280,7 @@ const ErrorLogs: React.FC = () => {
             type="link"
             size="small"
             icon={<EyeOutlined />}
-            onClick={() => handleViewDetail(record)}
+            onClick={() => navigate(`/errors/detail/${record.id}`)}
           >
             详情
           </Button>

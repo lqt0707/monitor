@@ -62,7 +62,7 @@
     "redis": "^4.6.8",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.1",
-    "source-map": "^0.7.4",
+    "source-map": "^0.7.6",
     "swagger-ui-express": "^5.0.0",
     "tar": "^7.4.3",
     "typeorm": "^0.3.17",

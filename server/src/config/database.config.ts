@@ -9,6 +9,8 @@ import { ProjectConfig } from "../modules/project-config/entities/project-config
 import { User } from "../modules/auth/entities/user.entity";
 import { AlertRule } from "../modules/alert/entities/alert-rule.entity";
 import { AlertHistory } from "../modules/alert/entities/alert-history.entity";
+import { SourceCodeVersion } from "../modules/monitor/entities/source-code-version.entity";
+import { SourceCodeFile } from "../modules/monitor/entities/source-code-file.entity";
 
 /**
  * MySQL数据库配置（存储元数据）
@@ -39,6 +41,8 @@ export class MySQLDatabaseConfig implements TypeOrmOptionsFactory {
         User,
         AlertRule,
         AlertHistory,
+        SourceCodeVersion,
+        SourceCodeFile,
       ],
       synchronize: this.configService.get<boolean>("MYSQL_SYNCHRONIZE", false),
       logging: this.configService.get<boolean>("MYSQL_LOGGING", false),

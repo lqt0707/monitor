@@ -21,6 +21,16 @@ export interface BaseConfig {
   enableInDev?: boolean;
   /** 采样率 (0-1) */
   sampleRate?: number;
+  /** 项目版本 */
+  projectVersion?: string;
+  /** 构建ID */
+  buildId?: string;
+  /** 构建时间 */
+  buildTime?: string;
+  /** 环境 */
+  environment?: "development" | "testing" | "staging" | "production";
+  /** 是否启用源代码映射 */
+  enableSourceMapping?: boolean;
 }
 
 /**
@@ -197,6 +207,27 @@ export interface ErrorData extends BaseMonitorData {
   componentStack?: string;
   /** 错误级别 */
   level?: "error" | "warning" | "info";
+  /** 项目版本 */
+  projectVersion?: string;
+  /** 构建ID */
+  buildId?: string;
+  /** 源代码映射状态 */
+  sourceMappingStatus?: "mapped" | "unmapped" | "pending";
+  /** 原始源文件路径 */
+  sourceFilePath?: string;
+  /** 原始源代码行号 */
+  sourceLineNumber?: number;
+  /** 原始源代码列号 */
+  sourceColumnNumber?: number;
+  /** 源代码上下文 */
+  sourceContext?: {
+    /** 前面的代码行 */
+    preLines: string[];
+    /** 错误行 */
+    errorLine: string;
+    /** 后面的代码行 */
+    postLines: string[];
+  };
 }
 
 /**

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>错误监控 SDK 版本信息示例</title>
+    <style>
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        h1 {
+            color: #1890ff;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .card {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        button:hover {
+            background: #40a9ff;
+        }
+
+        pre {
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+
+        .success {
+            color: #52c41a;
+        }
+
+        .error {
+            color: #f5222d;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>错误监控 SDK 版本信息示例</h1>
+
+    <div class="card">
+        <h2>版本信息配置</h2>
+        <p>本示例展示如何在初始化 SDK 时配置版本信息，以及如何在运行时更新版本信息。</p>
+        <div>
+            <label for="projectVersion">项目版本：</label>
+            <input type="text" id="projectVersion" value="1.0.0" />
+        </div>
+        <div>
+            <label for="buildId">构建 ID：</label>
+            <input type="text" id="buildId" value="build-2025-08-25" />
+        </div>
+        <div>
+            <label for="gitCommit">Git 提交 ID：</label>
+            <input type="text" id="gitCommit" value="a1b2c3d4e5f6" />
+        </div>
+        <div>
+            <button onclick="initSDK()">初始化 SDK</button>
+            <button onclick="updateVersionInfo()">更新版本信息</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>错误测试</h2>
+        <p>点击下面的按钮触发不同类型的错误，观察上报的错误信息中是否包含版本信息。</p>
+        <div>
+            <button onclick="triggerSyntaxError()">语法错误</button>
+            <button onclick="triggerReferenceError()">引用错误</button>
+            <button onclick="triggerTypeError()">类型错误</button>
+            <button onclick="triggerCustomError()">自定义错误</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>日志输出</h2>
+        <pre id="log"></pre>
+    </div>
+
+    <script>
+        // 模拟 SDK 加载
+        function loadSDK() {
+            return new Promise((resolve) => {
+                // 在实际项目中，这里应该是从 CDN 或本地文件加载 SDK
+                // 这里我们模拟一个简单的 SDK 对象
+                window.MonitorSDK = {
+                    init: function (config) {
+                        log('SDK 初始化成功，配置：' + JSON.stringify(config, null, 2));
+                        this.config = config;
+                        return this;
+                    },
+                    setVersionInfo: function (versionInfo) {
+                        log('设置版本信息：' + JSON.stringify(versionInfo, null, 2));
+                        this.config.versionInfo = versionInfo;
+                    },
+                    captureError: function (error, extra) {
+                        const errorInfo = {
+                            message: error instanceof Error ? error.message : String(error),
+                            stack: error instanceof Error ? error.stack : null,
+                            type: error instanceof Error ? error.constructor.name : typeof error,
+                            versionInfo: this.config.versionInfo,
+                            extra: extra
+                        };
+                        log('捕获错误：' + JSON.stringify(errorInfo, null, 2));
+                    }
+                };
+                setTimeout(resolve, 500); // 模拟加载延迟
+            });
+        }
+
+        // 初始化 SDK
+        async function initSDK() {
+            try {
+                await loadSDK();
+
+                const projectVersion = document.getElementById('projectVersion').value;
+                const buildId = document.getElementById('buildId').value;
+                const gitCommit = document.getElementById('gitCommit').value;
+
+                const versionInfo = {
+                    projectVersion,
+                    buildId,
+                    gitCommit,
+                    buildTime: new Date().toISOString()
+                };
+
+                window.MonitorSDK.init({
+                    appId: 'demo-app',
+                    userId: 'test-user',
+                    versionInfo: versionInfo,
+                    uploadUrl: 'https://api.example.com/monitor/upload'
+                });
+
+                log('<span class="success">SDK 初始化成功！版本信息已配置。</span>');
+            } catch (error) {
+                log('<span class="error">SDK 初始化失败：' + error.message + '</span>');
+            }
+        }
+
+        // 更新版本信息
+        function updateVersionInfo() {
+            if (!window.MonitorSDK) {
+                log('<span class="error">请先初始化 SDK</span>');
+                return;
+            }
+
+            const projectVersion = document.getElementById('projectVersion').value;
+            const buildId = document.getElementById('buildId').value;
+            const gitCommit = document.getElementById('gitCommit').value;
+
+            const versionInfo = {
+                projectVersion,
+                buildId,
+                gitCommit,
+                buildTime: new Date().toISOString()
+            };
+
+            window.MonitorSDK.setVersionInfo(versionInfo);
+            log('<span class="success">版本信息已更新！</span>');
+        }
+
+        // 触发语法错误
+        function triggerSyntaxError() {
+            try {
+                eval('const x = ;'); // 语法错误
+            } catch (error) {
+                if (window.MonitorSDK) {
+                    window.MonitorSDK.captureError(error);
+                } else {
+                    log('<span class="error">请先初始化 SDK</span>');
+                }
+            }
+        }
+
+        // 触发引用错误
+        function triggerReferenceError() {
+            try {
+                const y = undefinedVariable; // 引用错误
+            } catch (error) {
+                if (window.MonitorSDK) {
+                    window.MonitorSDK.captureError(error);
+                } else {
+                    log('<span class="error">请先初始化 SDK</span>');
+                }
+            }
+        }
+
+        // 触发类型错误
+        function triggerTypeError() {
+            try {
+                const z = null;
+                z.toString(); // 类型错误
+            } catch (error) {
+                if (window.MonitorSDK) {
+                    window.MonitorSDK.captureError(error);
+                } else {
+                    log('<span class="error">请先初始化 SDK</span>');
+                }
+            }
+        }
+
+        // 触发自定义错误
+        function triggerCustomError() {
+            try {
+                throw new Error('这是一个自定义错误，包含版本信息');
+            } catch (error) {
+                if (window.MonitorSDK) {
+                    window.MonitorSDK.captureError(error, {
+                        component: 'DemoPage',
+                        action: 'CustomErrorTest'
+                    });
+                } else {
+                    log('<span class="error">请先初始化 SDK</span>');
+                }
+            }
+        }
+
+        // 日志输出
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        // 页面加载完成
+        document.addEventListener('DOMContentLoaded', () => {
+            log('页面加载完成，请点击"初始化 SDK"按钮开始测试');
+        });
+    </script>
+</body>
+
+</html>

@@ -15,6 +15,7 @@ export * from "./interfaces/PlatformAdapter";
 
 // 工具函数
 export * from "./utils/common";
+export * from "./utils/version";
 export { DataQueue, RetryQueue, QueueEventType } from "./utils/queue";
 export type {
   QueueConfig,

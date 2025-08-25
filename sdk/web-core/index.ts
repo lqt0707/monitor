@@ -6,6 +6,7 @@
 import { BaseManager } from "../core/managers/BaseManager";
 import { MonitorConfig } from "../core/types/base";
 import { WebPlatformAdapter } from "../adapters/web/WebPlatformAdapter";
+import { getVersionInfo, VersionInfo } from "../core/utils/version";
 
 /**
  * Web监控SDK类
@@ -68,6 +69,19 @@ const MonitorSDK = {
    * @returns SDK实例
    */
   init: (config: MonitorConfig) => WebMonitorSDK.init(config),
+  
+  /**
+   * 设置版本信息
+   * @param versionInfo 版本信息对象
+   */
+  setVersionInfo: (versionInfo: VersionInfo) => {
+    const instance = WebMonitorSDK.getInstance();
+    if (instance) {
+      instance.setConfig({ versionInfo });
+    } else {
+      console.warn("[MonitorSDK] SDK not initialized, call init() first");
+    }
+  },
 
   /**
    * 获取当前实例
@@ -179,6 +193,7 @@ const MonitorSDK = {
 // 导出类型和接口
 export * from "../core/types/base";
 export { MonitorConfig } from "../core/types/base";
+export { getVersionInfo, VersionInfo } from "../core/utils/version";
 
 // 默认导出
 export default MonitorSDK;

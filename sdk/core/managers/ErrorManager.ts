@@ -11,6 +11,7 @@ import {
   serializeError,
   debounce,
 } from "../utils/common";
+import { parseSourceLocation, extractErrorContext } from "../utils/version";
 
 /**
  * 错误聚合信息
@@ -36,19 +37,25 @@ interface ErrorAggregation {
   recentErrors: ErrorData[];
 }
 
-/**
- * 错误管理器配置
- */
-interface ErrorManagerConfig extends ErrorConfig {
-  /** 错误聚合窗口时间（毫秒） */
-  aggregationWindow?: number;
-  /** 最大聚合错误数 */
-  maxAggregations?: number;
-  /** 重复错误的最大保留数量 */
-  maxRecentErrors?: number;
-  /** 是否启用错误聚合 */
-  enableAggregation?: boolean;
-}
+  /**
+   * 错误管理器配置
+   */
+  interface ErrorManagerConfig extends ErrorConfig {
+    /** 错误聚合窗口时间（毫秒） */
+    aggregationWindow?: number;
+    /** 最大聚合错误数 */
+    maxAggregations?: number;
+    /** 重复错误的最大保留数量 */
+    maxRecentErrors?: number;
+    /** 是否启用错误聚合 */
+    enableAggregation?: boolean;
+    /** 项目版本 */
+    projectVersion?: string;
+    /** 构建ID */
+    buildId?: string;
+    /** 是否启用源代码映射 */
+    enableSourceMapping?: boolean;
+  }
 
 /**
  * 错误管理器
@@ -71,6 +78,9 @@ export class ErrorManager {
       maxAggregations: 1000,
       maxRecentErrors: 5,
       enableAggregation: true,
+      projectVersion: undefined,
+      buildId: undefined,
+      enableSourceMapping: true,
       ...config,
     };
     this.errorCapture = errorCapture;
@@ -125,12 +135,77 @@ export class ErrorManager {
       return;
     }
 
+    // 添加版本信息
+    this.enrichErrorWithVersionInfo(error);
+
     // 错误聚合
     if (this.config.enableAggregation) {
       this.aggregateError(error);
     } else {
       // 直接上报
       this.reportError(error);
+    }
+  }
+
+  /**
+   * 添加版本信息到错误数据
+   * @param error 错误数据
+   */
+  private enrichErrorWithVersionInfo(error: ErrorData): void {
+    // 添加项目版本和构建ID
+    if (this.config.projectVersion) {
+      error.projectVersion = this.config.projectVersion;
+    }
+    
+    if (this.config.buildId) {
+      error.buildId = this.config.buildId;
+    }
+
+    // 初始化源代码映射状态
+    if (this.config.enableSourceMapping) {
+      error.sourceMappingStatus = "pending";
+    }
+
+    // 解析错误堆栈，提取文件路径、行号、列号
+    if (error.stack) {
+      this.parseErrorStack(error);
+    }
+  }
+
+  /**
+   * 解析错误堆栈，提取文件路径、行号、列号
+   * @param error 错误数据
+   */
+  private parseErrorStack(error: ErrorData): void {
+    // 已经有明确的文件名、行号、列号信息时，不需要再解析
+    if (error.filename && error.lineno !== undefined && error.colno !== undefined) {
+      return;
+    }
+
+    if (!error.stack) {
+      return;
+    }
+
+    // 使用版本工具函数解析堆栈
+    const sourceLocation = parseSourceLocation(error.stack);
+    
+    // 更新错误数据
+    if (sourceLocation.filename) {
+      error.filename = error.filename || sourceLocation.filename;
+    }
+    
+    if (sourceLocation.lineno) {
+      error.lineno = error.lineno || sourceLocation.lineno;
+    }
+    
+    if (sourceLocation.colno) {
+      error.colno = error.colno || sourceLocation.colno;
+    }
+    
+    // 提取原始文件路径（通常是压缩后的路径）
+    if (error.filename) {
+      // 保存原始文件路径，用于后续源代码映射
+      error.sourceFilePath = error.filename;
     }
   }
 

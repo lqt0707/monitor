@@ -1,0 +1,86 @@
+.error-detail-container {
+    padding: 20px;
+}
+
+.error-detail-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.back-button {
+    margin-right: 16px;
+}
+
+.error-title {
+    margin: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+}
+
+.error-level-tag {
+    margin-left: 12px;
+}
+
+.error-summary-card {
+    margin-bottom: 20px;
+}
+
+.error-detail-tabs {
+    background: #fff;
+    padding: 16px;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stack-card {
+    margin-bottom: 20px;
+}
+
+.stack-line {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.stack-text {
+    width: 100%;
+}
+
+.source-code-loading,
+.error-detail-loading,
+.no-source-code {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 300px;
+}
+
+.source-code-container {
+    margin-top: 16px;
+}
+
+.source-location-card {
+    margin-bottom: 16px;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .error-detail-container {
+        padding: 10px;
+    }
+
+    .error-detail-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .back-button {
+        margin-bottom: 10px;
+    }
+
+    .error-title {
+        font-size: 18px;
+    }
+}

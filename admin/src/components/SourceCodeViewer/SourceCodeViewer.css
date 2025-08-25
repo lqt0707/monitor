@@ -1,0 +1,126 @@
+.source-code-viewer {
+    margin-bottom: 20px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.source-code-viewer.expanded {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.source-code-viewer.expanded .ant-card-body {
+    flex: 1;
+    overflow: auto;
+}
+
+.source-code-viewer-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.source-code-viewer-actions {
+    display: flex;
+    align-items: center;
+}
+
+.source-code-content {
+    overflow: auto;
+    max-height: 500px;
+}
+
+.source-code-viewer.expanded .source-code-content {
+    max-height: none;
+    height: 100%;
+}
+
+.source-code-viewer-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+/* 错误行高亮样式 */
+.error-line {
+    background-color: rgba(255, 0, 0, 0.2);
+    display: block;
+    margin: 0 -10px;
+    padding: 0 10px;
+    border-left: 3px solid red;
+}
+
+/* 当前行高亮样式 */
+.current-line {
+    background-color: rgba(255, 255, 0, 0.1);
+    display: block;
+    margin: 0 -10px;
+    padding: 0 10px;
+}
+
+/* 行号样式 */
+.line-number {
+    user-select: none;
+    text-align: right;
+    padding-right: 10px;
+    margin-right: 10px;
+    display: inline-block;
+    min-width: 40px;
+    color: #999;
+    border-right: 1px solid #ddd;
+}
+
+/* 暗色模式下的行号样式 */
+.dark-mode .line-number {
+    color: #666;
+    border-right-color: #444;
+}
+
+/* 代码内容容器 */
+pre {
+    margin: 0 !important;
+    border-radius: 0 !important;
+}
+
+/* 自定义滚动条 */
+.source-code-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.source-code-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.source-code-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.source-code-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* 暗色模式下的滚动条 */
+.dark-mode .source-code-content::-webkit-scrollbar-track {
+    background: #2a2a2a;
+}
+
+.dark-mode .source-code-content::-webkit-scrollbar-thumb {
+    background: #666;
+}
+
+.dark-mode .source-code-content::-webkit-scrollbar-thumb:hover {
+    background: #888;
+}

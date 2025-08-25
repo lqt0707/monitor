@@ -1,0 +1,269 @@
+{
+  "projectId": "taromini",
+  "version": "1.0.0",
+  "description": "",
+  "buildId": "build-1756142532563",
+  "branch": "main",
+  "commit": "870ed8f85f961a30a6af777c3747d012b5e189c6",
+  "generatedAt": "2025-08-25T17:22:12.563Z",
+  "nodeVersion": "v22.16.0",
+  "platform": "darwin",
+  "arch": "arm64",
+  "totalFiles": 30,
+  "totalSize": 127548,
+  "files": [
+    {
+      "path": "INTEGRATION_SUCCESS_REPORT.md",
+      "size": 5168,
+      "md5": "a0eeaddb48fe4da3be083d070258fc23",
+      "type": "markdown",
+      "text": true,
+      "modified": "2025-08-23T03:22:44.751Z"
+    },
+    {
+      "path": "NEW_SDK_INTEGRATION_SUMMARY.md",
+      "size": 5219,
+      "md5": "56a14de8c0f7b96713224f7605611514",
+      "type": "markdown",
+      "text": true,
+      "modified": "2025-08-23T03:18:25.037Z"
+    },
+    {
+      "path": "OPTIMIZATION_SUMMARY.md",
+      "size": 6322,
+      "md5": "3a3606d4897c1dbc03512ee711aa45f6",
+      "type": "markdown",
+      "text": true,
+      "modified": "2025-08-25T16:32:01.935Z"
+    },
+    {
+      "path": "PROJECT_NAME_FORMAT_GUIDE.md",
+      "size": 2582,
+      "md5": "c3628ff113c111ce04d6659311eb8296",
+      "type": "markdown",
+      "text": true,
+      "modified": "2025-08-25T16:43:49.366Z"
+    },
+    {
+      "path": "SDK_TEST_GUIDE.md",
+      "size": 4502,
+      "md5": "3e39f627f4bfbabedc7fc58d434acca2",
+      "type": "markdown",
+      "text": true,
+      "modified": "2025-08-23T03:13:32.326Z"
+    },
+    {
+      "path": "SOURCE_CODE_PACKAGE_GUIDE.md",
+      "size": 3624,
+      "md5": "73ac148a4b17fb37d411431defef8d33",
+      "type": "markdown",
+      "text": true,
+      "modified": "2025-08-25T09:26:03.068Z"
+    },
+    {
+      "path": "SOURCE_CODE_PACKER_GUIDE.md",
+      "size": 6434,
+      "md5": "af7e26543886e94757f7839184cfcecd",
+      "type": "markdown",
+      "text": true,
+      "modified": "2025-08-25T16:31:19.083Z"
+    },
+    {
+      "path": "babel.config.js",
+      "size": 228,
+      "md5": "0736c566411aab6117b427f7f4a26a40",
+      "type": "javascript",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.120Z"
+    },
+    {
+      "path": "config/dev.ts",
+      "size": 184,
+      "md5": "678b489ce9995a4a7b69173345a35afd",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.119Z"
+    },
+    {
+      "path": "config/index.ts",
+      "size": 2862,
+      "md5": "fab76615855bd4a63da67ae809ae8f1e",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.119Z"
+    },
+    {
+      "path": "config/prod.ts",
+      "size": 1364,
+      "md5": "d7ef3dc7f3df09feee3f1075e56b3952",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-25T11:33:30.047Z"
+    },
+    {
+      "path": "pack-source-advanced.js",
+      "size": 23644,
+      "md5": "6ecc660b621fe7f684149d928a4574fe",
+      "type": "javascript",
+      "text": true,
+      "modified": "2025-08-25T16:30:20.213Z"
+    },
+    {
+      "path": "pack-source-code-optimized.js",
+      "size": 14609,
+      "md5": "c64ccc5316b6321396c4d388eb13c034",
+      "type": "javascript",
+      "text": true,
+      "modified": "2025-08-25T16:43:26.525Z"
+    },
+    {
+      "path": "pack-source-code.js",
+      "size": 5556,
+      "md5": "40908d59b7ccf5d7a33d5abcbee1984e",
+      "type": "javascript",
+      "text": true,
+      "modified": "2025-08-25T12:34:37.231Z"
+    },
+    {
+      "path": "pack-source-config.json",
+      "size": 1431,
+      "md5": "4b4fa73fcc64337000110186b0ffb3ae",
+      "type": "json",
+      "text": true,
+      "modified": "2025-08-25T16:28:00.678Z"
+    },
+    {
+      "path": "package.json",
+      "size": 3620,
+      "md5": "8ae73443380f54d97087d1e680469e3c",
+      "type": "json",
+      "text": true,
+      "modified": "2025-08-25T16:46:19.264Z"
+    },
+    {
+      "path": "project.config.json",
+      "size": 898,
+      "md5": "14caa98e55f37edec646de478e5fa8f5",
+      "type": "json",
+      "text": true,
+      "modified": "2025-08-22T09:52:55.792Z"
+    },
+    {
+      "path": "project.private.config.json",
+      "size": 572,
+      "md5": "f16eb27f81c279b94345e0130b34c4c0",
+      "type": "json",
+      "text": true,
+      "modified": "2025-08-22T09:52:55.792Z"
+    },
+    {
+      "path": "src/app.config.ts",
+      "size": 266,
+      "md5": "7b65ed43fa2d2394e7c0fa03b5bfdb1e",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-23T04:47:20.206Z"
+    },
+    {
+      "path": "src/app.scss",
+      "size": 0,
+      "md5": "d41d8cd98f00b204e9800998ecf8427e",
+      "type": "scss",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.122Z"
+    },
+    {
+      "path": "src/app.ts",
+      "size": 3369,
+      "md5": "df62e580ef445f6ca5cadfbc31e43ae9",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-23T04:47:20.208Z"
+    },
+    {
+      "path": "src/index.html",
+      "size": 641,
+      "md5": "6cfa3f2c53f4329879f6242477c74b23",
+      "type": "html",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.122Z"
+    },
+    {
+      "path": "src/pages/index/index.config.ts",
+      "size": 72,
+      "md5": "92e4dcb2b964a8405d98f36375ec454f",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.123Z"
+    },
+    {
+      "path": "src/pages/index/index.scss",
+      "size": 2557,
+      "md5": "12d8242e9460a2b3fbc904542d994d7a",
+      "type": "scss",
+      "text": true,
+      "modified": "2025-08-23T03:55:21.437Z"
+    },
+    {
+      "path": "src/pages/index/index.tsx",
+      "size": 17457,
+      "md5": "7d3604cef6f7cc44e3b8336c3f2cb69d",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-23T04:47:20.329Z"
+    },
+    {
+      "path": "src/pages/realworld/realworld.scss",
+      "size": 3153,
+      "md5": "6dd0d7f443c4fb0fedfc0a660c847f9c",
+      "type": "scss",
+      "text": true,
+      "modified": "2025-08-23T04:47:20.376Z"
+    },
+    {
+      "path": "src/pages/realworld/realworld.tsx",
+      "size": 8042,
+      "md5": "912213dd14848ef47e44ab5d69373f36",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-23T04:47:20.345Z"
+    },
+    {
+      "path": "src/utils/errorBoundary.tsx",
+      "size": 1490,
+      "md5": "f8aae74209265f0133e47d488370a63d",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-23T03:22:44.760Z"
+    },
+    {
+      "path": "tsconfig.json",
+      "size": 712,
+      "md5": "0b9b40f7f69edebc618153de02f0fc0b",
+      "type": "json",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.121Z"
+    },
+    {
+      "path": "types/global.d.ts",
+      "size": 970,
+      "md5": "df93e930fb4c7e02ce1dfa8c39e01139",
+      "type": "typescript",
+      "text": true,
+      "modified": "2025-08-14T09:51:42.118Z"
+    }
+  ],
+  "fileTypes": {
+    "markdown": 7,
+    "javascript": 4,
+    "typescript": 10,
+    "json": 5,
+    "scss": 3,
+    "html": 1
+  },
+  "packager": {
+    "name": "taro-mini-source-packer",
+    "version": "2.0.0",
+    "optimized": true
+  }
+}

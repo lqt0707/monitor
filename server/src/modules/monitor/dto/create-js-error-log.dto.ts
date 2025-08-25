@@ -182,6 +182,50 @@ export class CreateJsErrorLogDto {
   tags?: string[];
 
   /**
+   * 项目版本号
+   */
+  @ApiPropertyOptional({
+    description: "项目版本号",
+    example: "1.0.0",
+  })
+  @IsString()
+  @IsOptional()
+  projectVersion?: string;
+
+  /**
+   * 构建ID或Git提交哈希
+   */
+  @ApiPropertyOptional({
+    description: "构建ID或Git提交哈希",
+    example: "abc123def456",
+  })
+  @IsString()
+  @IsOptional()
+  buildId?: string;
+
+  /**
+   * 函数名称
+   */
+  @ApiPropertyOptional({
+    description: "函数名称",
+    example: "handleClick",
+  })
+  @IsString()
+  @IsOptional()
+  functionName?: string;
+
+  /**
+   * sourcemap文件路径
+   */
+  @ApiPropertyOptional({
+    description: "sourcemap文件路径",
+    example: "/static/js/main.js.map",
+  })
+  @IsString()
+  @IsOptional()
+  sourcemapPath?: string;
+
+  /**
    * 额外数据
    */
   @ApiPropertyOptional({ description: "额外数据" })

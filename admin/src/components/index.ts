@@ -56,3 +56,7 @@ export { NotificationManager } from "./ResponsiveNotification";
 
 // 注意：类型定义需要在各个组件文件中单独导出
 // 如需使用类型定义，请直接从对应的组件文件中导入
+
+// 源代码查看器组件
+export { default as SourceCodeViewer } from './SourceCodeViewer';
+export * from './SourceCodeViewer';

@@ -58,7 +58,8 @@
     "precommit": "./pre-commit.sh",
     "commit": "git add . && npm run precommit && git commit",
     "push": "git push origin main",
-    "release": "npm run build && npm run test && git tag -a v$(node -p \"require('./package.json').version\") -m \"Release version $(node -p \"require('./package.json').version\")\" && git push --tags"
+    "release": "npm run build && npm run test && git tag -a v$(node -p \"require('./package.json').version\") -m \"Release version $(node -p \"require('./package.json').version\")\" && git push --tags",
+    "pack:source": "node scripts/pack-source-code.mjs --projectId $PROJECT --version $VERSION"
   },
   "workspaces": [
     "server",
@@ -104,6 +105,9 @@
     }
   },
   "dependencies": {
-    "axios": "^1.11.0"
+    "axios": "^1.11.0",
+    "form-data": "^4.0.4",
+    "adm-zip": "^0.5.12",
+    "globby": "^14.0.2"
   }
 }

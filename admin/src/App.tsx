@@ -20,7 +20,9 @@ import Login from "./pages/auth/Login";
 import Dashboard from "./pages/dashboard/Dashboard";
 import ErrorLogs from "./pages/errors/ErrorLogs";
 import ErrorAggregations from "./pages/errors/ErrorAggregations";
+import ErrorDetail from "./pages/errors/ErrorDetail";
 import ProjectManagement from "./pages/projects/ProjectManagement";
+import SourceCodeManager from "./pages/source-code/SourceCodeManager";
 import UserManagement from "./pages/UserManagement";
 import PermissionManagement from "./pages/PermissionManagement";
 import StatisticsReport from "./pages/StatisticsReport";
@@ -102,11 +104,21 @@ const App: React.FC = () => {
                           path="/errors/aggregations"
                           element={<ErrorAggregations />}
                         />
+                        <Route
+                          path="/errors/detail/:errorId"
+                          element={<ErrorDetail />}
+                        />
 
                         {/* 项目管理 */}
                         <Route
                           path="/projects/list"
                           element={<ProjectManagement />}
+                        />
+                        
+                        {/* 源代码管理 */}
+                        <Route
+                          path="/source-code"
+                          element={<SourceCodeManager />}
                         />
 
                         {/* 统计报表 */}

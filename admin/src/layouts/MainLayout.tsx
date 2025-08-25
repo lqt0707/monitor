@@ -59,6 +59,10 @@ const menuItems: MenuProps["items"] = [
         key: "/projects/list",
         label: "项目列表",
       },
+      {
+        key: "/source-code",
+        label: "源代码管理",
+      },
     ],
   },
   {

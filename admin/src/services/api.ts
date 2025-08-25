@@ -508,4 +508,37 @@ class ApiClient {
 
 // 导出 API 客户端实例
 export const apiClient = new ApiClient();
+
+// 导出便捷函数以保持向后兼容
+export const fetchErrorDetail = apiClient.errorLogs.getDetail;
+export const fetchErrorSourceCode = async (errorId: number) => {
+  // 这里可以添加获取源代码的逻辑
+  // 暂时返回空对象，后续可以根据需要实现
+  return { sourceCode: '', fileName: '', lineNumber: 0 };
+};
+
+// 导出通用请求函数 - 兼容旧的 request 函数格式
+export const request = async (url: string, options: any = {}) => {
+  const { method = 'GET', data, params, headers } = options;
+  
+  try {
+    let response;
+    if (method.toLowerCase() === 'get') {
+      response = await axios.get(API_BASE_URL + url, { params, headers });
+    } else if (method.toLowerCase() === 'post') {
+      response = await axios.post(API_BASE_URL + url, data, { headers });
+    } else if (method.toLowerCase() === 'put') {
+      response = await axios.put(API_BASE_URL + url, data, { headers });
+    } else if (method.toLowerCase() === 'delete') {
+      response = await axios.delete(API_BASE_URL + url, { headers });
+    } else {
+      response = await axios.request({ url: API_BASE_URL + url, method, data, params, headers });
+    }
+    
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export default apiClient;
