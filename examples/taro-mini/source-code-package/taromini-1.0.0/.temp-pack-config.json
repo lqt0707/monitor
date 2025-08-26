@@ -1,0 +1,29 @@
+{
+  "includePatterns": [
+    "src/**/*",
+    "config/**/*",
+    "types/**/*",
+    "*.json",
+    "*.js",
+    "*.ts",
+    "*.md",
+    "src/**/*",
+    "config/**/*",
+    "types/**/*",
+    "project.config.json",
+    "project.private.config.json"
+  ],
+  "excludePatterns": [
+    "node_modules/**/*",
+    ".git/**/*",
+    "dist/**/*",
+    "build/**/*",
+    "*.log",
+    ".DS_Store",
+    "package-lock.json",
+    "source-code-package/**/*",
+    "dist/**/*",
+    "node_modules/**/*",
+    ".temp/**/*"
+  ]
+}

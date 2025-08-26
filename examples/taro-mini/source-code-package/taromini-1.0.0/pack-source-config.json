@@ -1,0 +1,70 @@
+{
+  "projectInfo": {
+    "name": "taroMini",
+    "description": "Taro 小程序项目源代码包"
+  },
+  "fileTypes": {
+    "javascript": [".js", ".jsx"],
+    "typescript": [".ts", ".tsx"],
+    "vue": [".vue"],
+    "css": [".css", ".scss", ".less", ".sass"],
+    "html": [".html", ".htm"],
+    "json": [".json"],
+    "xml": [".xml"],
+    "yaml": [".yaml", ".yml"],
+    "markdown": [".md"],
+    "text": [".txt", ".csv"]
+  },
+  "includePatterns": [
+    "src/**/*",
+    "config/**/*",
+    "types/**/*",
+    "*.json",
+    "*.js",
+    "*.ts",
+    "*.md"
+  ],
+  "excludePatterns": [
+    "node_modules/**/*",
+    ".git/**/*",
+    ".husky/**/*",
+    "dist/**/*",
+    "build/**/*",
+    "coverage/**/*",
+    "*.log",
+    "*.tmp",
+    ".DS_Store",
+    "package-lock.json",
+    "yarn.lock",
+    "pnpm-lock.yaml",
+    ".env*",
+    "*.map",
+    "source-code-package/**/*"
+  ],
+  "compression": {
+    "enabled": true,
+    "format": "zip",
+    "level": 6
+  },
+  "validation": {
+    "maxFileSize": 52428800,
+    "maxTotalSize": 104857600,
+    "requiredFields": ["projectId", "version", "buildId"]
+  },
+  "output": {
+    "directory": "source-code-package",
+    "includeManifest": true,
+    "preserveStructure": true,
+    "addTimestamp": true
+  },
+  "git": {
+    "includeCommitInfo": true,
+    "includeBranchInfo": true,
+    "includeRemoteInfo": false
+  },
+  "debug": {
+    "verbose": false,
+    "logFileList": false,
+    "showProgress": true
+  }
+}
