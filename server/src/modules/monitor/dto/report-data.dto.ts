@@ -14,6 +14,14 @@ export class ReportDataDto {
   projectId: string;
 
   /**
+   * 项目版本
+   */
+  @ApiPropertyOptional({ description: '项目版本', example: '1.0.0' })
+  @IsString()
+  @IsOptional()
+  projectVersion?: string;
+
+  /**
    * 数据类型
    */
   @ApiProperty({ 

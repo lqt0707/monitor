@@ -1,7 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { SourceMapConsumer } from 'source-map';
-import * as fs from 'fs';
-import * as path from 'path';
+import { Injectable, Logger } from "@nestjs/common";
+import { SourceMapConsumer } from "source-map";
+import * as fs from "fs";
+import * as path from "path";
 
 export interface SourceMapPosition {
   source: string;
@@ -11,10 +11,10 @@ export interface SourceMapPosition {
 }
 
 export interface ErrorStackFrame {
+  functionName?: string;
   fileName: string;
   lineNumber: number;
   columnNumber: number;
-  functionName?: string;
 }
 
 export interface ResolvedStackFrame extends ErrorStackFrame {
@@ -22,8 +22,6 @@ export interface ResolvedStackFrame extends ErrorStackFrame {
   originalLine?: number;
   originalColumn?: number;
   originalName?: string;
-  sourceContent?: string;
-  contextLines?: string[];
 }
 
 @Injectable()
@@ -32,7 +30,7 @@ export class SourcemapResolverService {
   private readonly sourcemapCache = new Map<string, SourceMapConsumer>();
 
   /**
-   * 解析错误堆栈，将压缩后的位置映射到原始源代码位置
+   * 解析错误堆栈中的源代码位置
    */
   async resolveErrorStack(
     projectId: string,
@@ -42,14 +40,12 @@ export class SourcemapResolverService {
     const resolvedFrames: ResolvedStackFrame[] = [];
 
     for (const frame of stackFrames) {
-      try {
-        const resolved = await this.resolveStackFrame(projectId, version, frame);
-        resolvedFrames.push(resolved);
-      } catch (error) {
-        this.logger.warn(`Failed to resolve stack frame: ${error.message}`);
-        // 如果解析失败，返回原始信息
-        resolvedFrames.push(frame);
-      }
+      const resolvedFrame = await this.resolveStackFrame(
+        projectId,
+        version,
+        frame
+      );
+      resolvedFrames.push(resolvedFrame);
     }
 
     return resolvedFrames;
@@ -63,50 +59,54 @@ export class SourcemapResolverService {
     version: string,
     frame: ErrorStackFrame
   ): Promise<ResolvedStackFrame> {
-    const sourcemapPath = this.getSourcemapPath(projectId, version, frame.fileName);
-    
-    if (!fs.existsSync(sourcemapPath)) {
-      this.logger.warn(`Sourcemap not found: ${sourcemapPath}`);
-      return frame;
+    try {
+      const sourcemapPath = this.getSourcemapPath(
+        projectId,
+        version,
+        frame.fileName
+      );
+
+      if (!fs.existsSync(sourcemapPath)) {
+        this.logger.warn(`Sourcemap not found: ${sourcemapPath}`);
+        return frame;
+      }
+
+      const consumer = await this.getSourceMapConsumer(sourcemapPath);
+
+      const position = consumer.originalPositionFor({
+        line: frame.lineNumber,
+        column: frame.columnNumber,
+      });
+
+      if (position.source) {
+        return {
+          ...frame,
+          originalSource: position.source,
+          originalLine: position.line,
+          originalColumn: position.column,
+          originalName: position.name,
+        };
+      }
+    } catch (error) {
+      this.logger.error(`Error resolving stack frame: ${error.message}`, error);
     }
 
-    const consumer = await this.getSourceMapConsumer(sourcemapPath);
-    
-    const originalPosition = consumer.originalPositionFor({
-      line: frame.lineNumber,
-      column: frame.columnNumber
-    });
-
-    if (!originalPosition.source) {
-      return frame;
-    }
-
-    // 获取原始源代码内容
-    const sourceContent = consumer.sourceContentFor(originalPosition.source);
-    const contextLines = this.getContextLines(sourceContent, originalPosition.line);
-
-    return {
-      ...frame,
-      originalSource: originalPosition.source,
-      originalLine: originalPosition.line,
-      originalColumn: originalPosition.column,
-      originalName: originalPosition.name,
-      sourceContent,
-      contextLines
-    };
+    return frame;
   }
 
   /**
-   * 获取 SourceMap Consumer
+   * 获取或创建 SourceMap Consumer
    */
-  private async getSourceMapConsumer(sourcemapPath: string): Promise<SourceMapConsumer> {
+  private async getSourceMapConsumer(
+    sourcemapPath: string
+  ): Promise<SourceMapConsumer> {
     if (this.sourcemapCache.has(sourcemapPath)) {
       return this.sourcemapCache.get(sourcemapPath);
     }
 
-    const sourcemapContent = fs.readFileSync(sourcemapPath, 'utf8');
+    const sourcemapContent = fs.readFileSync(sourcemapPath, "utf8");
     const consumer = await new SourceMapConsumer(sourcemapContent);
-    
+
     // 缓存 consumer，但设置合理的缓存大小限制
     if (this.sourcemapCache.size > 100) {
       // 清理最旧的缓存
@@ -115,7 +115,7 @@ export class SourcemapResolverService {
       oldConsumer?.destroy();
       this.sourcemapCache.delete(firstKey);
     }
-    
+
     this.sourcemapCache.set(sourcemapPath, consumer);
     return consumer;
   }
@@ -123,29 +123,60 @@ export class SourcemapResolverService {
   /**
    * 获取 sourcemap 文件路径
    */
-  private getSourcemapPath(projectId: string, version: string, fileName: string): string {
+  private getSourcemapPath(
+    projectId: string,
+    version: string,
+    fileName: string
+  ): string {
     // 从文件名提取 sourcemap 路径
     const baseName = path.basename(fileName, path.extname(fileName));
-    const sourcemapFileName = `${baseName}.js.map`;
-    
-    return path.join(
+    const sourcemapDir = path.join(
       process.cwd(),
-      'storage',
-      'source-code',
-      projectId,
-      version,
-      'sourcemaps',
-      sourcemapFileName
+      "storage",
+      "sourcemaps",
+      projectId
     );
+
+    // 首先尝试标准格式的文件名
+    const standardFileName = `${baseName}.js.map`;
+    const standardPath = path.join(sourcemapDir, standardFileName);
+
+    if (fs.existsSync(standardPath)) {
+      return standardPath;
+    }
+
+    // 如果标准格式不存在，尝试查找带时间戳的文件
+    try {
+      const files = fs.readdirSync(sourcemapDir);
+      const matchingFile = files.find(
+        (file) => file.startsWith(`${baseName}.js_`) && file.endsWith(".map")
+      );
+
+      if (matchingFile) {
+        return path.join(sourcemapDir, matchingFile);
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Failed to read sourcemap directory: ${sourcemapDir}`,
+        error
+      );
+    }
+
+    // 如果都找不到，返回标准路径（让后续逻辑处理文件不存在的情况）
+    return standardPath;
   }
 
   /**
    * 获取错误位置的上下文代码行
    */
-  private getContextLines(sourceContent: string, lineNumber: number, contextSize = 5): string[] {
+  private getContextLines(
+    sourceContent: string,
+    lineNumber: number,
+    contextSize = 5
+  ): string[] {
     if (!sourceContent) return [];
 
-    const lines = sourceContent.split('\n');
+    const lines = sourceContent.split("\n");
     const startLine = Math.max(0, lineNumber - contextSize - 1);
     const endLine = Math.min(lines.length, lineNumber + contextSize);
 
@@ -157,7 +188,7 @@ export class SourcemapResolverService {
    */
   parseErrorStack(stackTrace: string): ErrorStackFrame[] {
     const frames: ErrorStackFrame[] = [];
-    const lines = stackTrace.split('\n');
+    const lines = stackTrace.split("\n");
 
     for (const line of lines) {
       const frame = this.parseStackLine(line.trim());
@@ -182,7 +213,7 @@ export class SourcemapResolverService {
       // Firefox 格式: functionName@file:line:column
       /(.+?)@(.+?):(\d+):(\d+)/,
       // Safari 格式: functionName@file:line:column
-      /(.+?)@(.+?):(\d+):(\d+)/
+      /(.+?)@(.+?):(\d+):(\d+)/,
     ];
 
     for (const pattern of patterns) {
@@ -194,14 +225,14 @@ export class SourcemapResolverService {
             functionName: match[1],
             fileName: match[2],
             lineNumber: parseInt(match[3]),
-            columnNumber: parseInt(match[4])
+            columnNumber: parseInt(match[4]),
           };
         } else if (match.length === 4) {
           // 不包含函数名的格式
           return {
             fileName: match[1],
             lineNumber: parseInt(match[2]),
-            columnNumber: parseInt(match[3])
+            columnNumber: parseInt(match[3]),
           };
         }
       }

@@ -171,6 +171,8 @@ export interface BaseMonitorData {
   timestamp: number;
   /** 项目ID */
   projectId: string;
+  /** 项目版本 */
+  projectVersion?: string;
   /** 用户ID */
   userId?: string;
   /** 会话ID */

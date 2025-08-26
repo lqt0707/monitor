@@ -234,6 +234,11 @@ export class BaseManager implements EventEmitter {
     data.userId = this.config.userId;
     data.sessionId = this.sessionId;
     data.platform = this.platformAdapter.platformInfo.platform;
+    
+    // 添加项目版本信息
+    if (this.config.projectVersion) {
+      data.projectVersion = this.config.projectVersion;
+    }
 
     if (this.config.tags) {
       data.tags = { ...data.tags, ...this.config.tags };

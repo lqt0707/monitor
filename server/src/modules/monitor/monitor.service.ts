@@ -1,9 +1,9 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
-import { MonitorData } from './entities/monitor-data.entity';
-import { ReportDataDto } from './dto/report-data.dto';
-import { QueueService } from './services/queue.service';
+import { Injectable, Logger } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository, Between } from "typeorm";
+import { MonitorData } from "./entities/monitor-data.entity";
+import { ReportDataDto } from "./dto/report-data.dto";
+import { QueueService } from "./services/queue.service";
 
 /**
  * 监控数据服务
@@ -15,7 +15,7 @@ export class MonitorService {
   constructor(
     @InjectRepository(MonitorData)
     private readonly monitorDataRepository: Repository<MonitorData>,
-    private readonly queueService: QueueService,
+    private readonly queueService: QueueService
   ) {}
 
   /**
@@ -23,11 +23,14 @@ export class MonitorService {
    * @param reportData 上报的监控数据
    * @returns 包含任务ID的响应
    */
-  async saveMonitorData(reportData: ReportDataDto): Promise<{ id: string; message: string }> {
+  async saveMonitorData(
+    reportData: ReportDataDto
+  ): Promise<{ id: string; message: string }> {
     try {
       // 创建监控数据实体（不立即保存到数据库）
       const monitorData = this.monitorDataRepository.create({
         projectId: reportData.projectId,
+        projectVersion: reportData.projectVersion, // 添加项目版本信息
         type: reportData.type,
         errorMessage: reportData.errorMessage,
         errorStack: reportData.errorStack,
@@ -46,12 +49,12 @@ export class MonitorService {
 
       // 添加到监控数据处理队列
       await this.queueService.addMonitorProcessingJob(monitorData);
-      
+
       this.logger.log(`监控数据已添加到处理队列`);
 
       return {
-        id: 'queued',
-        message: '监控数据已加入处理队列'
+        id: "queued",
+        message: "监控数据已加入处理队列",
       };
     } catch (error) {
       this.logger.error(`添加监控数据到队列失败: ${error.message}`);
@@ -64,7 +67,9 @@ export class MonitorService {
    * @param monitorData 监控数据实体
    * @returns 保存后的监控数据
    */
-  async saveMonitorDataDirectly(monitorData: MonitorData): Promise<MonitorData> {
+  async saveMonitorDataDirectly(
+    monitorData: MonitorData
+  ): Promise<MonitorData> {
     try {
       const savedData = await this.monitorDataRepository.save(monitorData);
       this.logger.log(`监控数据直接保存成功: ${savedData.id}`);
@@ -91,27 +96,31 @@ export class MonitorService {
     startDate?: Date,
     endDate?: Date,
     page: number = 1,
-    limit: number = 20,
+    limit: number = 20
   ) {
-    const queryBuilder = this.monitorDataRepository.createQueryBuilder('monitor');
+    const queryBuilder =
+      this.monitorDataRepository.createQueryBuilder("monitor");
 
     if (projectId) {
-      queryBuilder.andWhere('monitor.projectId = :projectId', { projectId });
+      queryBuilder.andWhere("monitor.projectId = :projectId", { projectId });
     }
 
     if (type) {
-      queryBuilder.andWhere('monitor.type = :type', { type });
+      queryBuilder.andWhere("monitor.type = :type", { type });
     }
 
     if (startDate && endDate) {
-      queryBuilder.andWhere('monitor.createdAt BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
-      });
+      queryBuilder.andWhere(
+        "monitor.createdAt BETWEEN :startDate AND :endDate",
+        {
+          startDate,
+          endDate,
+        }
+      );
     }
 
     const [data, total] = await queryBuilder
-      .orderBy('monitor.createdAt', 'DESC')
+      .orderBy("monitor.createdAt", "DESC")
       .skip((page - 1) * limit)
       .take(limit)
       .getManyAndCount();
@@ -132,28 +141,28 @@ export class MonitorService {
    * @param endDate 结束日期
    * @returns 统计数据
    */
-  async getMonitorStats(
-    projectId?: string,
-    startDate?: Date,
-    endDate?: Date,
-  ) {
-    const queryBuilder = this.monitorDataRepository.createQueryBuilder('monitor');
+  async getMonitorStats(projectId?: string, startDate?: Date, endDate?: Date) {
+    const queryBuilder =
+      this.monitorDataRepository.createQueryBuilder("monitor");
 
     if (projectId) {
-      queryBuilder.andWhere('monitor.projectId = :projectId', { projectId });
+      queryBuilder.andWhere("monitor.projectId = :projectId", { projectId });
     }
 
     if (startDate && endDate) {
-      queryBuilder.andWhere('monitor.createdAt BETWEEN :startDate AND :endDate', {
-        startDate,
-        endDate,
-      });
+      queryBuilder.andWhere(
+        "monitor.createdAt BETWEEN :startDate AND :endDate",
+        {
+          startDate,
+          endDate,
+        }
+      );
     }
 
     const stats = await queryBuilder
-      .select('monitor.type', 'type')
-      .addSelect('COUNT(*)', 'count')
-      .groupBy('monitor.type')
+      .select("monitor.type", "type")
+      .addSelect("COUNT(*)", "count")
+      .groupBy("monitor.type")
       .getRawMany();
 
     const total = await queryBuilder.getCount();
@@ -179,7 +188,7 @@ export class MonitorService {
     const result = await this.monitorDataRepository
       .createQueryBuilder()
       .delete()
-      .where('createdAt < :cutoffDate', { cutoffDate })
+      .where("createdAt < :cutoffDate", { cutoffDate })
       .execute();
 
     return result.affected || 0;

@@ -44,6 +44,14 @@ export class CreateErrorLogDto {
   projectId: string;
 
   /**
+   * 项目版本号
+   */
+  @ApiPropertyOptional({ description: "项目版本号", example: "1.0.0" })
+  @IsString()
+  @IsOptional()
+  projectVersion?: string;
+
+  /**
    * 错误类型
    */
   @ApiProperty({

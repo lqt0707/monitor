@@ -1,4 +1,4 @@
-import { request } from './api';
+import { request } from "./api";
 
 /**
  * 获取错误详情
@@ -6,9 +6,9 @@ import { request } from './api';
  * @returns 错误详情
  */
 export async function fetchErrorDetail(errorId: string) {
-    return request(`/api/error-log/${errorId}`, {
-        method: 'GET',
-    });
+  return request(`/api/error-logs/${errorId}`, {
+    method: "GET",
+  });
 }
 
 /**
@@ -17,9 +17,9 @@ export async function fetchErrorDetail(errorId: string) {
  * @returns 错误源代码信息
  */
 export async function fetchErrorSourceCode(errorId: string) {
-    return request(`/api/error-location/error/${errorId}/source-code`, {
-        method: 'GET',
-    });
+  return request(`/api/error-location/error/${errorId}/source-code`, {
+    method: "GET",
+  });
 }
 
 /**
@@ -28,17 +28,17 @@ export async function fetchErrorSourceCode(errorId: string) {
  * @returns 解析结果
  */
 export async function resolveErrorLocation(data: {
-    projectId: string;
-    version: string;
-    stackTrace: string;
-    fileName?: string;
-    lineNumber?: number;
-    columnNumber?: number;
+  projectId: string;
+  version: string;
+  stackTrace: string;
+  fileName?: string;
+  lineNumber?: number;
+  columnNumber?: number;
 }) {
-    return request('/api/error-location/resolve', {
-        method: 'POST',
-        data,
-    });
+  return request("/api/error-location/resolve", {
+    method: "POST",
+    data,
+  });
 }
 
 /**
@@ -51,20 +51,23 @@ export async function resolveErrorLocation(data: {
  * @returns 源代码内容
  */
 export async function fetchSourceCodeContent(
-    projectId: string,
-    version: string,
-    filePath: string,
-    lineNumber?: number,
-    contextSize?: number
+  projectId: string,
+  version: string,
+  filePath: string,
+  lineNumber?: number,
+  contextSize?: number
 ) {
-    return request(`/api/source-code-version/file-content/${projectId}/${version}`, {
-        method: 'GET',
-        params: {
-            filePath,
-            lineNumber,
-            contextSize,
-        },
-    });
+  return request(
+    `/api/source-code-version/file-content/${projectId}/${version}`,
+    {
+      method: "GET",
+      params: {
+        filePath,
+        lineNumber,
+        contextSize,
+      },
+    }
+  );
 }
 
 /**
@@ -72,18 +75,20 @@ export async function fetchSourceCodeContent(
  * @param errors 错误位置数据数组
  * @returns 批量解析结果
  */
-export async function batchResolveErrorLocation(errors: Array<{
+export async function batchResolveErrorLocation(
+  errors: Array<{
     projectId: string;
     version: string;
     stackTrace: string;
     fileName?: string;
     lineNumber?: number;
     columnNumber?: number;
-}>) {
-    return request('/api/error-location/batch-resolve', {
-        method: 'POST',
-        data: { errors },
-    });
+  }>
+) {
+  return request("/api/error-location/batch-resolve", {
+    method: "POST",
+    data: { errors },
+  });
 }
 
 /**
@@ -92,10 +97,10 @@ export async function batchResolveErrorLocation(errors: Array<{
  * @returns 版本列表
  */
 export async function fetchSourceCodeVersions(projectId: string) {
-    return request('/api/source-code-version/versions', {
-        method: 'GET',
-        params: { projectId },
-    });
+  return request("/api/source-code-version/versions", {
+    method: "GET",
+    params: { projectId },
+  });
 }
 
 /**
@@ -105,10 +110,10 @@ export async function fetchSourceCodeVersions(projectId: string) {
  * @returns 文件列表
  */
 export async function fetchSourceCodeFiles(projectId: string, version: string) {
-    return request('/api/source-code-version/files', {
-        method: 'GET',
-        params: { projectId, version },
-    });
+  return request("/api/source-code-version/files", {
+    method: "GET",
+    params: { projectId, version },
+  });
 }
 
 /**
@@ -117,13 +122,13 @@ export async function fetchSourceCodeFiles(projectId: string, version: string) {
  * @returns 上传结果
  */
 export async function uploadSourceCodeArchive(formData: FormData) {
-    return request('/api/source-code-version/upload', {
-        method: 'POST',
-        data: formData,
-        headers: {
-            'Content-Type': 'multipart/form-data',
-        },
-    });
+  return request("/api/source-code-version/upload", {
+    method: "POST",
+    data: formData,
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 }
 
 /**
@@ -132,10 +137,16 @@ export async function uploadSourceCodeArchive(formData: FormData) {
  * @param versionId 版本ID
  * @returns 设置结果
  */
-export async function setActiveSourceCodeVersion(projectId: string, versionId: string) {
-    return request(`/api/source-code-version/set-active/${projectId}/${versionId}`, {
-        method: 'POST',
-    });
+export async function setActiveSourceCodeVersion(
+  projectId: string,
+  versionId: string
+) {
+  return request(
+    `/api/source-code-version/set-active/${projectId}/${versionId}`,
+    {
+      method: "POST",
+    }
+  );
 }
 
 /**
@@ -144,8 +155,11 @@ export async function setActiveSourceCodeVersion(projectId: string, versionId: s
  * @param version 版本号
  * @returns 删除结果
  */
-export async function deleteSourceCodeVersion(projectId: string, version: string) {
-    return request(`/api/source-code-version/${projectId}/${version}`, {
-        method: 'DELETE',
-    });
+export async function deleteSourceCodeVersion(
+  projectId: string,
+  version: string
+) {
+  return request(`/api/source-code-version/${projectId}/${version}`, {
+    method: "DELETE",
+  });
 }

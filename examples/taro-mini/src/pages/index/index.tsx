@@ -1,7 +1,7 @@
 import { View, Text, Button } from "@tarojs/components";
 import { useLoad } from "@tarojs/taro";
 import Taro from "@tarojs/taro";
-import Monitor, { Templates } from "@monitor/taro-sdk";
+import Monitor, { Templates } from "@monitor/sdk/taro";
 import { createErrorBoundary } from "../../utils/errorBoundary";
 import { useState, useEffect } from "react";
 import "./index.scss";
@@ -188,6 +188,50 @@ function Index() {
       title: "Console错误已触发，SDK自动捕获",
       icon: "success",
     });
+  };
+
+  // 测试源码定位错误 - 专门用于验证源码定位功能
+  const testSourceCodeLocationError = () => {
+    console.log("🎯 测试源码定位错误 - 用于验证错误定位到源码功能...");
+
+    try {
+      // 创建一个具有明确位置信息的错误
+      const testFunction = () => {
+        const nullObject: any = null;
+        // 这行会在第XXX行触发错误，用于测试源码定位
+        return nullObject.someProperty.deepProperty.value;
+      };
+
+      // 调用会出错的函数
+      testFunction();
+    } catch (error) {
+      console.log("🚨 源码定位测试错误被捕获:", error);
+
+      // 手动上报错误，确保包含完整的堆栈信息
+      Monitor.captureError(error as Error, {
+        context: "source_code_location_test",
+        page: "index",
+        action: "testSourceCodeLocationError",
+        testType: "source_location",
+        timestamp: Date.now(),
+        // 添加额外的上下文信息帮助定位
+        additionalInfo: {
+          functionName: "testSourceCodeLocationError",
+          expectedFile: "src/pages/index/index.tsx",
+          expectedLine: "around line 180-190",
+          purpose: "测试源码定位功能",
+        },
+      });
+
+      console.log("✅ 源码定位测试错误已上报，请在错误记录中查看源码定位效果");
+
+      setTimeout(updateQueueStatus, 100);
+
+      Taro.showToast({
+        title: "源码定位测试错误已触发",
+        icon: "success",
+      });
+    }
   };
 
   // 新增：测试用户行为记录
@@ -400,6 +444,13 @@ function Index() {
         </Button>
         <Button className="test-btn" onClick={testConsoleError} type="default">
           触发Console错误（自动捕获）
+        </Button>
+        <Button
+          className="test-btn"
+          onClick={testSourceCodeLocationError}
+          type="primary"
+        >
+          🎯 测试源码定位错误
         </Button>
       </View>
 

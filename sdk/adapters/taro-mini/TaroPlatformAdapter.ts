@@ -132,6 +132,7 @@ class TaroErrorCapture implements ErrorCaptureAdapter {
       id: generateId(),
       timestamp: getTimestamp(),
       projectId: this.getProjectId(), // 使用方法获取projectId
+      projectVersion: this.config?.projectVersion, // 添加项目版本信息
       sessionId: generateSessionId(),
       url: this.getCurrentPagePath(),
       userAgent: this.getUserAgent(),
@@ -219,6 +220,7 @@ class TaroErrorCapture implements ErrorCaptureAdapter {
       id: generateId(),
       timestamp: getTimestamp(),
       projectId: this.getProjectId(), // 使用正确的projectId
+      projectVersion: this.config?.projectVersion, // 添加项目版本信息
       sessionId: generateSessionId(),
       url: this.getCurrentPagePath(),
       userAgent: this.getUserAgent(),
@@ -707,6 +709,11 @@ class TaroNetworkAdapter implements NetworkAdapter {
       userAgent: data.userAgent,
     };
 
+    // 添加项目版本信息（重要：作为顶级字段）
+    if (data.projectVersion) {
+      reportData.projectVersion = data.projectVersion;
+    }
+
     // 根据数据类型添加特定字段
     if (data.message) {
       reportData.errorMessage = data.message;
@@ -743,6 +750,7 @@ class TaroNetworkAdapter implements NetworkAdapter {
           "id",
           "timestamp",
           "projectId",
+          "projectVersion", // 添加projectVersion到排除列表
           "sessionId",
           "url",
           "pageUrl",

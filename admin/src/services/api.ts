@@ -167,11 +167,12 @@ class ApiClient {
     getList: async (
       params: QueryParams
     ): Promise<{ data: ErrorLog[]; total: number }> => {
-      const response = await this.instance.get<
-        ApiResponse<ErrorLog[]>
-      >("/api/error-logs", {
-        params,
-      });
+      const response = await this.instance.get<ApiResponse<ErrorLog[]>>(
+        "/api/error-logs",
+        {
+          params,
+        }
+      );
       return {
         data: response.data.data,
         total: response.data.total || 0,
@@ -203,11 +204,12 @@ class ApiClient {
     getList: async (
       params: QueryParams
     ): Promise<{ data: ErrorAggregation[]; total: number }> => {
-      const response = await this.instance.get<
-        ApiResponse<ErrorAggregation[]>
-      >("/api/error-aggregations", {
-        params,
-      });
+      const response = await this.instance.get<ApiResponse<ErrorAggregation[]>>(
+        "/api/error-aggregations",
+        {
+          params,
+        }
+      );
       return {
         data: response.data.data,
         total: response.data.total || 0,
@@ -426,11 +428,12 @@ class ApiClient {
      * @param data 上传请求数据
      * @returns 上传和分析结果
      */
-    upload: async (data: UploadSourceCodeRequest): Promise<UploadSourceCodeResponse> => {
-      const response = await this.instance.post<ApiResponse<UploadSourceCodeResponse>>(
-        "/api/source-code/upload",
-        data
-      );
+    upload: async (
+      data: UploadSourceCodeRequest
+    ): Promise<UploadSourceCodeResponse> => {
+      const response = await this.instance.post<
+        ApiResponse<UploadSourceCodeResponse>
+      >("/api/source-code/upload", data);
       return response.data.data;
     },
 
@@ -439,11 +442,12 @@ class ApiClient {
      * @param data 批量上传请求数据
      * @returns 批量上传结果
      */
-    batchUpload: async (data: BatchUploadSourceCodeRequest): Promise<BatchUploadSourceCodeResponse> => {
-      const response = await this.instance.post<ApiResponse<BatchUploadSourceCodeResponse>>(
-        "/api/source-code/batch-upload",
-        data
-      );
+    batchUpload: async (
+      data: BatchUploadSourceCodeRequest
+    ): Promise<BatchUploadSourceCodeResponse> => {
+      const response = await this.instance.post<
+        ApiResponse<BatchUploadSourceCodeResponse>
+      >("/api/source-code/batch-upload", data);
       return response.data.data;
     },
 
@@ -452,11 +456,12 @@ class ApiClient {
      * @param data 压缩包上传数据
      * @returns 解压和处理结果
      */
-    uploadArchive: async (data: UploadSourceCodeArchiveRequest): Promise<UploadSourceCodeArchiveResponse> => {
-      const response = await this.instance.post<ApiResponse<UploadSourceCodeArchiveResponse>>(
-        "/api/source-code/upload-archive",
-        data
-      );
+    uploadArchive: async (
+      data: UploadSourceCodeArchiveRequest
+    ): Promise<UploadSourceCodeArchiveResponse> => {
+      const response = await this.instance.post<
+        ApiResponse<UploadSourceCodeArchiveResponse>
+      >("/api/source-code/upload-archive", data);
       return response.data.data;
     },
   };
@@ -470,11 +475,12 @@ class ApiClient {
      * @param data Sourcemap上传数据
      * @returns 上传结果
      */
-    upload: async (data: UploadSourcemapRequest): Promise<UploadSourcemapResponse> => {
-      const response = await this.instance.post<ApiResponse<UploadSourcemapResponse>>(
-        "/api/sourcemap-upload/upload",
-        data
-      );
+    upload: async (
+      data: UploadSourcemapRequest
+    ): Promise<UploadSourcemapResponse> => {
+      const response = await this.instance.post<
+        ApiResponse<UploadSourcemapResponse>
+      >("/api/sourcemap-upload/upload", data);
       return response.data.data;
     },
 
@@ -483,11 +489,12 @@ class ApiClient {
      * @param data 压缩包上传数据
      * @returns 解压和处理结果
      */
-    uploadArchive: async (data: UploadSourcemapArchiveRequest): Promise<UploadSourcemapArchiveResponse> => {
-      const response = await this.instance.post<ApiResponse<UploadSourcemapArchiveResponse>>(
-        "/api/sourcemap-upload/upload-archive",
-        data
-      );
+    uploadArchive: async (
+      data: UploadSourcemapArchiveRequest
+    ): Promise<UploadSourcemapArchiveResponse> => {
+      const response = await this.instance.post<
+        ApiResponse<UploadSourcemapArchiveResponse>
+      >("/api/sourcemap-upload/upload-archive", data);
       return response.data.data;
     },
 
@@ -496,11 +503,12 @@ class ApiClient {
      * @param data 多个Sourcemap上传数据
      * @returns 批量处理结果
      */
-    batchUpload: async (data: BatchUploadSourcemapRequest): Promise<BatchUploadSourcemapResponse> => {
-      const response = await this.instance.post<ApiResponse<BatchUploadSourcemapResponse>>(
-        "/api/sourcemap-upload/batch-upload",
-        data
-      );
+    batchUpload: async (
+      data: BatchUploadSourcemapRequest
+    ): Promise<BatchUploadSourcemapResponse> => {
+      const response = await this.instance.post<
+        ApiResponse<BatchUploadSourcemapResponse>
+      >("/api/sourcemap-upload/batch-upload", data);
       return response.data.data;
     },
   };
@@ -511,30 +519,42 @@ export const apiClient = new ApiClient();
 
 // 导出便捷函数以保持向后兼容
 export const fetchErrorDetail = apiClient.errorLogs.getDetail;
-export const fetchErrorSourceCode = async (errorId: number) => {
-  // 这里可以添加获取源代码的逻辑
-  // 暂时返回空对象，后续可以根据需要实现
-  return { sourceCode: '', fileName: '', lineNumber: 0 };
+export const fetchErrorSourceCode = async (errorId: string | number) => {
+  try {
+    const response = await apiClient.instance.get(
+      `/api/error-location/error/${errorId}/source-code`
+    );
+    return response.data;
+  } catch (error) {
+    console.error("获取源代码失败:", error);
+    throw error;
+  }
 };
 
 // 导出通用请求函数 - 兼容旧的 request 函数格式
 export const request = async (url: string, options: any = {}) => {
-  const { method = 'GET', data, params, headers } = options;
-  
+  const { method = "GET", data, params, headers } = options;
+
   try {
     let response;
-    if (method.toLowerCase() === 'get') {
+    if (method.toLowerCase() === "get") {
       response = await axios.get(API_BASE_URL + url, { params, headers });
-    } else if (method.toLowerCase() === 'post') {
+    } else if (method.toLowerCase() === "post") {
       response = await axios.post(API_BASE_URL + url, data, { headers });
-    } else if (method.toLowerCase() === 'put') {
+    } else if (method.toLowerCase() === "put") {
       response = await axios.put(API_BASE_URL + url, data, { headers });
-    } else if (method.toLowerCase() === 'delete') {
+    } else if (method.toLowerCase() === "delete") {
       response = await axios.delete(API_BASE_URL + url, { headers });
     } else {
-      response = await axios.request({ url: API_BASE_URL + url, method, data, params, headers });
+      response = await axios.request({
+        url: API_BASE_URL + url,
+        method,
+        data,
+        params,
+        headers,
+      });
     }
-    
+
     return response.data;
   } catch (error) {
     throw error;

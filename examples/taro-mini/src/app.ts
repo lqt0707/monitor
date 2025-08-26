@@ -1,6 +1,6 @@
 import { PropsWithChildren } from "react";
 import { useLaunch, useError } from "@tarojs/taro";
-import Monitor, { Templates } from "@monitor/taro-sdk";
+import { default as Monitor, Templates } from "@monitor/sdk/taro";
 
 import "./app.scss";
 
@@ -11,16 +11,15 @@ function App({ children }: PropsWithChildren<any>) {
     // 使用更显式的初始化方式来确保SDK正确启动
     try {
       // 在小程序环境中，需要使用具体的IP地址而不是localhost
-      const serverUrl =
-        process.env.NODE_ENV === "development"
-          ? "http://127.0.0.1:3001" // 本地开发使用127.0.0.1
-          : "http://localhost:3001"; // 其他环境使用localhost
+      // 在小程序环境中，需要使用具体的IP地址而不是localhost
+      const serverUrl = "http://localhost:3001"; // 统一使用localhost:3001
 
       console.log("🚀 初始化Monitor SDK，服务器地址:", serverUrl);
 
       // 方式1: 使用显式配置初始化（推荐，确保环境配置正确）
       const config = {
-        projectId: "taromini-project",
+        projectId: "taromini",
+        projectVersion: "1.0.0", // 添加项目版本信息，与上传的源代码版本保持一致
         serverUrl,
         enableInDev: true, // 开发环境启用
         debug: true, // 启用调试信息

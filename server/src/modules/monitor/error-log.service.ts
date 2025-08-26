@@ -53,6 +53,7 @@ export class ErrorLogService {
       // 创建错误日志
       const errorLog = this.errorLogRepository.create({
         projectId: createErrorLogDto.projectId,
+        projectVersion: createErrorLogDto.projectVersion, // 添加项目版本号
         type: createErrorLogDto.type,
         errorHash,
         errorMessage: createErrorLogDto.errorMessage,
@@ -133,6 +134,7 @@ export class ErrorLogService {
         // 创建错误日志
         const errorLog = this.errorLogRepository.create({
           projectId: dto.projectId,
+          projectVersion: dto.projectVersion, // 添加项目版本号
           type: dto.type,
           errorHash,
           errorMessage: dto.errorMessage,
@@ -194,9 +196,7 @@ export class ErrorLogService {
    * @param query 查询参数
    * @returns 错误日志列表和总数
    */
-  async findErrorLogs(
-    query: QueryErrorLogDto
-  ): Promise<[ErrorLog[], number]> {
+  async findErrorLogs(query: QueryErrorLogDto): Promise<[ErrorLog[], number]> {
     try {
       const queryBuilder =
         this.errorLogRepository.createQueryBuilder("errorLog");
@@ -363,6 +363,34 @@ export class ErrorLogService {
       return trends;
     } catch (error) {
       this.logger.error("获取错误趋势数据失败", error);
+      throw error;
+    }
+  }
+
+  /**
+   * 更新错误日志
+   * @param id 错误日志ID
+   * @param updateData 更新数据
+   * @returns 更新后的错误日志
+   */
+  async updateErrorLog(
+    id: number,
+    updateData: Partial<ErrorLog>
+  ): Promise<ErrorLog> {
+    try {
+      await this.errorLogRepository.update(id, updateData);
+      const updatedErrorLog = await this.errorLogRepository.findOne({
+        where: { id },
+      });
+
+      if (!updatedErrorLog) {
+        throw new Error(`Error log with id ${id} not found`);
+      }
+
+      this.logger.log(`错误日志更新成功: ${id}`);
+      return updatedErrorLog;
+    } catch (error) {
+      this.logger.error(`更新错误日志失败: ${id}`, error);
       throw error;
     }
   }

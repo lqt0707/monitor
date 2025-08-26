@@ -68,6 +68,7 @@ import { MonitorProcessingProcessor } from "./processors/monitor-processing.proc
     ErrorAggregationService,
     PerformanceMetricService,
     QueueService,
+    SourcemapResolverService,
   ],
 })
 export class MonitorModule {}
