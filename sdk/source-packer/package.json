@@ -1,0 +1,26 @@
+{
+  "name": "@monitor/source-packer",
+  "version": "1.0.0",
+  "description": "Monitor SDK 源代码打包工具",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch"
+  },
+  "keywords": [
+    "monitor",
+    "source-code",
+    "packer",
+    "sdk"
+  ],
+  "author": "Monitor Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "typescript": "^5.9.2"
+  }
+}
