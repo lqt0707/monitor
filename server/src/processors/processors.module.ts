@@ -3,7 +3,6 @@ import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ErrorProcessingProcessor } from '../modules/monitor/processors/error-processing.processor';
 import { MonitorProcessingProcessor } from '../modules/monitor/processors/monitor-processing.processor';
-import { AiDiagnosisProcessor } from '../modules/ai-diagnosis/processors/ai-diagnosis.processor';
 import { EmailNotificationProcessor } from '../modules/email/processors/email-notification.processor';
 import { SourcemapProcessingProcessor } from '../modules/sourcemap/processors/sourcemap-processing.processor';
 import { ErrorAggregationProcessor } from '../modules/monitor/processors/error-aggregation.processor';
@@ -18,6 +17,7 @@ import { ProjectConfigModule } from '../modules/project-config/project-config.mo
 import { ServicesModule } from '../services/services.module';
 import { MonitorModule } from '../modules/monitor/monitor.module';
 import { AlertModule } from '../modules/alert/alert.module';
+import { DeepSeekModule } from '../modules/deepseek/deepseek.module';
 import { QUEUE_NAMES } from '../config/queue.config';
 
 /**
@@ -50,11 +50,12 @@ import { QUEUE_NAMES } from '../config/queue.config';
     MonitorModule,
     // 导入告警模块（提供AlertRuleService等）
     forwardRef(() => AlertModule),
+    // 导入DeepSeek AI模块（提供DeepSeekService）
+    DeepSeekModule,
   ],
   providers: [
     ErrorProcessingProcessor,
     MonitorProcessingProcessor,
-    AiDiagnosisProcessor,
     EmailNotificationProcessor,
     SourcemapProcessingProcessor,
     ErrorAggregationProcessor,
@@ -64,7 +65,6 @@ import { QUEUE_NAMES } from '../config/queue.config';
   ],
   exports: [
     ErrorProcessingProcessor,
-    AiDiagnosisProcessor,
     EmailNotificationProcessor,
     SourcemapProcessingProcessor,
     ErrorAggregationProcessor,

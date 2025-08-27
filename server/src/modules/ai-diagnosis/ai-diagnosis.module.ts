@@ -1,10 +1,14 @@
-import { Module } from '@nestjs/common';
-import { BullModule } from '@nestjs/bull';
-import { TypeOrmModule } from '@nestjs/typeorm';
-import { AiDiagnosisService } from '../../services/ai-diagnosis.service';
-import { AiDiagnosisProcessor } from './processors/ai-diagnosis.processor';
-import { ErrorAggregation } from '../monitor/entities/error-aggregation.entity';
-import { QUEUE_NAMES } from '../../config/queue.config';
+import { Module } from "@nestjs/common";
+import { BullModule } from "@nestjs/bull";
+import { TypeOrmModule } from "@nestjs/typeorm";
+import { AiDiagnosisService } from "../../services/ai-diagnosis.service";
+import { AiDiagnosisProcessor } from "./processors/ai-diagnosis.processor";
+import { AiDiagnosisController } from "./controllers/ai-diagnosis.controller";
+import { ErrorAggregation } from "../monitor/entities/error-aggregation.entity";
+import { ErrorLog } from "../monitor/entities/error-log.entity";
+import { QUEUE_NAMES } from "../../config/queue.config";
+import { DeepSeekModule } from "../deepseek/deepseek.module";
+import { SourcemapModule } from "../sourcemap/sourcemap.module";
 
 /**
  * AI诊断模块
@@ -12,11 +16,12 @@ import { QUEUE_NAMES } from '../../config/queue.config';
  */
 @Module({
   imports: [
-    BullModule.registerQueue(
-      { name: QUEUE_NAMES.AI_DIAGNOSIS },
-    ),
-    TypeOrmModule.forFeature([ErrorAggregation]),
+    BullModule.registerQueue({ name: QUEUE_NAMES.AI_DIAGNOSIS }),
+    TypeOrmModule.forFeature([ErrorAggregation, ErrorLog]),
+    DeepSeekModule,
+    SourcemapModule,
   ],
+  controllers: [AiDiagnosisController],
   providers: [AiDiagnosisService, AiDiagnosisProcessor],
   exports: [AiDiagnosisService],
 })

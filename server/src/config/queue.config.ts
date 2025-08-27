@@ -2,12 +2,12 @@
  * 队列名称常量
  */
 export const QUEUE_NAMES = {
-  ERROR_PROCESSING: 'error-processing',
-  AI_DIAGNOSIS: 'ai-diagnosis',
-  EMAIL_NOTIFICATION: 'email-notification',
-  SOURCEMAP_PROCESSING: 'sourcemap-processing',
-  ERROR_AGGREGATION: 'error-aggregation',
-  MONITOR_PROCESSING: 'monitor-processing',
+  ERROR_PROCESSING: "error-processing",
+  AI_DIAGNOSIS: "ai-diagnosis",
+  EMAIL_NOTIFICATION: "email-notification",
+  SOURCEMAP_PROCESSING: "sourcemap-processing",
+  ERROR_AGGREGATION: "error-aggregation",
+  MONITOR_PROCESSING: "monitor-processing",
 } as const;
 
 /**
@@ -15,38 +15,40 @@ export const QUEUE_NAMES = {
  */
 export const JOB_TYPES = {
   // 错误处理队列任务
-  PROCESS_ERROR: 'process-error',
-  CALCULATE_ERROR_HASH: 'calculate-error-hash',
-  UPDATE_AGGREGATION: 'update-aggregation',
-  
+  PROCESS_ERROR: "process-error",
+  CALCULATE_ERROR_HASH: "calculate-error-hash",
+  UPDATE_AGGREGATION: "update-aggregation",
+
   // AI诊断队列任务
-  ANALYZE_ERROR: 'analyze-error',
-  GENERATE_FIX_SUGGESTION: 'generate-fix-suggestion',
-  
+  ANALYZE_ERROR: "analyze-error",
+  GENERATE_FIX_SUGGESTION: "generate-fix-suggestion",
+  COMPREHENSIVE_ANALYSIS: "comprehensive-analysis",
+  UNIFIED_ERROR_ANALYSIS: "unified-error-analysis",
+
   // 邮件通知队列任务
-  SEND_ALERT_EMAIL: 'send-alert-email',
-  SEND_SUMMARY_EMAIL: 'send-summary-email',
-  
+  SEND_ALERT_EMAIL: "send-alert-email",
+  SEND_SUMMARY_EMAIL: "send-summary-email",
+
   // SourceMap处理队列任务
-  PARSE_SOURCEMAP: 'parse-sourcemap',
-  MAP_ERROR_LOCATION: 'map-error-location',
-  
+  PARSE_SOURCEMAP: "parse-sourcemap",
+  MAP_ERROR_LOCATION: "map-error-location",
+
   // 错误聚合队列任务
-  AGGREGATE_ERRORS: 'aggregate-errors',
-  CLEANUP_OLD_ERRORS: 'cleanup-old-errors',
-  
+  AGGREGATE_ERRORS: "aggregate-errors",
+  CLEANUP_OLD_ERRORS: "cleanup-old-errors",
+
   // 监控数据处理队列任务
-  PROCESS_MONITOR_DATA: 'process-monitor-data',
+  PROCESS_MONITOR_DATA: "process-monitor-data",
 } as const;
 
 /**
  * 队列优先级
  */
 export const JOB_PRIORITIES = {
-  CRITICAL: 10,  // 关键错误，立即处理
-  HIGH: 5,       // 高优先级
-  NORMAL: 0,     // 普通优先级
-  LOW: -5,       // 低优先级
+  CRITICAL: 10, // 关键错误，立即处理
+  HIGH: 5, // 高优先级
+  NORMAL: 0, // 普通优先级
+  LOW: -5, // 低优先级
 } as const;
 
 /**
@@ -59,7 +61,7 @@ export const QUEUE_OPTIONS = {
       removeOnFail: 100,
       attempts: 3,
       backoff: {
-        type: 'exponential',
+        type: "exponential",
         delay: 1000,
       },
     },
@@ -68,31 +70,31 @@ export const QUEUE_OPTIONS = {
       maxStalledCount: 1,
     },
   },
-  
+
   [QUEUE_NAMES.AI_DIAGNOSIS]: {
     defaultJobOptions: {
       removeOnComplete: 50,
       removeOnFail: 25,
       attempts: 2,
       backoff: {
-        type: 'exponential',
-        delay: 5000,
+        type: "exponential",
+        delay: 3000, // 减少延迟时间，提高响应速度
       },
-      delay: 2000, // 延迟2秒执行，避免频繁调用AI接口
+      delay: 1000, // 减少延迟执行时间，从2秒减少到1秒
     },
     settings: {
       stalledInterval: 60 * 1000,
       maxStalledCount: 1,
     },
   },
-  
+
   [QUEUE_NAMES.EMAIL_NOTIFICATION]: {
     defaultJobOptions: {
       removeOnComplete: 100,
       removeOnFail: 50,
       attempts: 5,
       backoff: {
-        type: 'exponential',
+        type: "exponential",
         delay: 3000,
       },
     },
@@ -101,14 +103,14 @@ export const QUEUE_OPTIONS = {
       maxStalledCount: 2,
     },
   },
-  
+
   [QUEUE_NAMES.SOURCEMAP_PROCESSING]: {
     defaultJobOptions: {
       removeOnComplete: 50,
       removeOnFail: 25,
       attempts: 2,
       backoff: {
-        type: 'fixed',
+        type: "fixed",
         delay: 2000,
       },
     },
@@ -117,14 +119,14 @@ export const QUEUE_OPTIONS = {
       maxStalledCount: 1,
     },
   },
-  
+
   [QUEUE_NAMES.ERROR_AGGREGATION]: {
     defaultJobOptions: {
       removeOnComplete: 100,
       removeOnFail: 50,
       attempts: 3,
       backoff: {
-        type: 'exponential',
+        type: "exponential",
         delay: 2000,
       },
     },
@@ -133,14 +135,14 @@ export const QUEUE_OPTIONS = {
       maxStalledCount: 1,
     },
   },
-  
+
   [QUEUE_NAMES.MONITOR_PROCESSING]: {
     defaultJobOptions: {
       removeOnComplete: 500,
       removeOnFail: 100,
       attempts: 2,
       backoff: {
-        type: 'exponential',
+        type: "exponential",
         delay: 1000,
       },
     },

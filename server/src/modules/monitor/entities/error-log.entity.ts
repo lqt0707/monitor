@@ -188,6 +188,25 @@ export class ErrorLog {
   aiDiagnosis?: string;
 
   /**
+   * 综合分析报告（JSON格式）
+   * 包含错误根本原因、代码定位、修复建议等完整分析
+   */
+  @Column({ name: "comprehensive_analysis_report", type: "text", nullable: true })
+  comprehensiveAnalysisReport?: string;
+
+  /**
+   * 综合分析报告生成时间
+   */
+  @Column({ name: "comprehensive_analysis_generated_at", type: "datetime", nullable: true })
+  comprehensiveAnalysisGeneratedAt?: Date;
+
+  /**
+   * 综合分析报告版本
+   */
+  @Column({ name: "comprehensive_analysis_version", length: 50, nullable: true })
+  comprehensiveAnalysisVersion?: string;
+
+  /**
    * 错误级别
    */
   @Column({ name: "error_level", default: 1 })

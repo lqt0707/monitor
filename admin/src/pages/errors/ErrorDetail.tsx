@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -12,6 +12,18 @@ import {
   Divider,
   Space,
   List,
+  message,
+  Timeline,
+  Collapse,
+  Tooltip,
+  Progress,
+  notification,
+  Badge,
+  Steps,
+  Result,
+  Row,
+  Col,
+  Statistic,
 } from "antd";
 import {
   ArrowLeftOutlined,
@@ -21,13 +33,46 @@ import {
   UserOutlined,
   GlobalOutlined,
   MobileOutlined,
+  RobotOutlined,
+  ReloadOutlined,
+  FileTextOutlined,
+  BulbOutlined,
+  SafetyOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  SyncOutlined,
+  CloseCircleOutlined,
+  PlayCircleOutlined,
+  PauseCircleOutlined,
 } from "@ant-design/icons";
+import {
+  Bubble,
+  Sender,
+  useXAgent,
+  useXChat,
+  XRequest,
+  ThoughtChain,
+  Suggestion,
+} from "@ant-design/x";
 import SourceCodeViewer from "../../components/SourceCodeViewer";
-import { fetchErrorDetail, fetchErrorSourceCode } from "../../services/api";
+import ComprehensiveAnalysisReport from "../../components/ComprehensiveAnalysisReport";
+import {
+  fetchErrorDetail,
+  fetchErrorSourceCode,
+  apiClient,
+} from "../../services/api";
+import type {
+  AiDiagnosisResult,
+  DiagnosisTaskStatus,
+} from "../../types/monitor";
 import "./ErrorDetail.css";
+import { useInitialLoad } from "../../hooks/useInitialLoad";
 
 const { Title, Text, Paragraph } = Typography;
 const { TabPane } = Tabs;
+const { Panel } = Collapse;
+const { Step } = Steps;
 
 // 错误级别映射
 const errorLevelMap = {
@@ -55,44 +100,76 @@ const ErrorDetail: React.FC = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [sourceCodeLoading, setSourceCodeLoading] = useState(false);
+  const [aiDiagnosisLoading, setAiDiagnosisLoading] = useState(false);
   const [error, setError] = useState<any>(null);
   const [sourceCode, setSourceCode] = useState<any>(null);
+  const [aiDiagnosis, setAiDiagnosis] = useState<any>(null);
   const [activeTab, setActiveTab] = useState("1");
 
-  // 获取错误详情
-  useEffect(() => {
-    const loadErrorDetail = async () => {
-      try {
-        setLoading(true);
-        if (errorId) {
-          const response = await fetchErrorDetail(errorId);
-          console.log("response:", response);
+  // 增强的状态管理（优化版）
+  const [diagnosisTaskId, setDiagnosisTaskId] = useState<string | null>(null);
+  const [diagnosisStatus, setDiagnosisStatus] =
+    useState<DiagnosisTaskStatus | null>(null);
+  const [diagnosisProgress, setDiagnosisProgress] = useState<number>(0);
+  const [diagnosisSteps, setDiagnosisSteps] = useState<string[]>([]);
+  const [currentStep, setCurrentStep] = useState<number>(0);
+  const [isPolling, setIsPolling] = useState<boolean>(false);
+  const [lastUpdateTime, setLastUpdateTime] = useState<Date | null>(null);
+  const [diagnosisStartTime, setDiagnosisStartTime] = useState<Date | null>(
+    null
+  );
+  const [pollCount, setPollCount] = useState<number>(0);
+  const [estimatedTimeRemaining, setEstimatedTimeRemaining] =
+    useState<string>("");
+  const [operationFeedback, setOperationFeedback] = useState<{
+    type: "success" | "info" | "warning" | "error";
+    message: string;
+    description: string;
+    timestamp: Date;
+  } | null>(null);
 
-          if (response) {
-            setError(response);
-          } else {
-            throw new Error("获取错误详情失败");
-          }
+  // 综合分析相关状态
+  const [comprehensiveAnalysisLoading, setComprehensiveAnalysisLoading] =
+    useState<boolean>(false);
+  const [comprehensiveReport, setComprehensiveReport] = useState<any>(null);
+
+  // 使用ref来管理轮询和清理
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const progressRef = useRef<NodeJS.Timeout | null>(null);
+  const loadErrorDetail = async () => {
+    try {
+      setLoading(true);
+      if (errorId) {
+        const response = await fetchErrorDetail(Number(errorId));
+        console.log("response:", response);
+
+        if (response) {
+          setError(response);
+        } else {
+          throw new Error("获取错误详情失败");
         }
-      } catch (err) {
-        console.error("加载错误详情失败:", err);
-      } finally {
-        setLoading(false);
       }
-    };
+    } catch (err) {
+      console.error("加载错误详情失败:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  // 获取错误详情
+  useInitialLoad(() => {
     loadErrorDetail();
   }, [errorId]);
 
   // 获取源代码
   const loadSourceCode = async () => {
-    if (!error || !error.projectId || !error.projectVersion) {
+    if (!error || !error.projectId || !error.projectVersion || !errorId) {
       return;
     }
 
     try {
       setSourceCodeLoading(true);
-      const response = await fetchErrorSourceCode(errorId);
+      const response = await fetchErrorSourceCode(Number(errorId));
       if (response.success && response.data) {
         setSourceCode(response.data);
       } else {
@@ -105,12 +182,840 @@ const ErrorDetail: React.FC = () => {
     }
   };
 
+  // 获取AI诊断
+  const loadAiDiagnosis = async () => {
+    if (!error || !error.id) {
+      console.warn("无法获取AI诊断：缺少错误信息或错误ID");
+      return;
+    }
+
+    try {
+      setAiDiagnosisLoading(true);
+      console.log(`开始获取错误ID ${error.id} 的AI诊断结果`);
+      console.log("错误详情:", {
+        id: error.id,
+        errorMessage: error.errorMessage,
+        errorHash: error.errorHash,
+        projectId: error.projectId,
+        sourceFile: error.sourceFile,
+        sourceLine: error.sourceLine,
+      });
+
+      const response = await apiClient.aiDiagnosis.getErrorDiagnosis(
+        Number(error.id)
+      );
+
+      console.log(`错误ID ${error.id} 的AI诊断响应:`, response);
+
+      // 验证响应数据的完整性
+      if (response && response.analysis) {
+        console.log(`错误ID ${error.id} 获取到AI诊断结果:`, {
+          analysis: response.analysis,
+          possibleCauses: response.possibleCauses,
+          fixSuggestions: response.fixSuggestions,
+          exactLocation: response.exactLocation,
+        });
+      } else {
+        console.log(`错误ID ${error.id} 的AI诊断响应:`, response);
+      }
+
+      setAiDiagnosis(response);
+    } catch (err) {
+      console.error(`获取错误ID ${error.id} 的AI诊断失败:`, err);
+      message.error("获取AI诊断失败，请稍后重试");
+    } finally {
+      setAiDiagnosisLoading(false);
+    }
+  };
+
+  // 初始化诊断步骤（优化版 - 基于单次AI调用）
+  const initializeDiagnosisSteps = useCallback(() => {
+    setDiagnosisSteps(["数据收集", "AI分析", "结果生成", "完成"]);
+    setCurrentStep(0);
+    setDiagnosisProgress(0);
+    setPollCount(0);
+    setDiagnosisStartTime(new Date());
+    setLastUpdateTime(new Date());
+  }, []);
+
+  // 更新诊断进度（优化版 - 更平滑的进度更新）
+  const updateDiagnosisProgress = useCallback(() => {
+    const interval = setInterval(() => {
+      setDiagnosisProgress((prev) => {
+        if (prev >= 85) return prev; // 保留15%给最终完成
+        return Math.min(prev + Math.random() * 8, 85);
+      });
+      setLastUpdateTime(new Date());
+    }, 1500); // 稍微加快进度更新
+
+    return interval;
+  }, []);
+
+  // 清理定时器
+  const cleanupTimers = useCallback(() => {
+    if (progressRef.current) {
+      clearInterval(progressRef.current);
+      progressRef.current = null;
+    }
+  }, []);
+
+  // 显示操作反馈
+  const showOperationFeedback = useCallback(
+    (
+      type: "success" | "info" | "warning" | "error",
+      message: string,
+      description: string
+    ) => {
+      const feedback = {
+        type,
+        message,
+        description,
+        timestamp: new Date(),
+      };
+
+      setOperationFeedback(feedback);
+
+      // 同时显示通知
+      const notificationMethod = notification[type] || notification.info;
+      notificationMethod({
+        message,
+        description,
+        duration: type === "success" ? 5 : 8,
+        placement: "topRight",
+      });
+
+      // 自动清除反馈（成功和错误类型保留更长时间）
+      const clearDelay =
+        type === "success" ? 8000 : type === "error" ? 10000 : 5000;
+      setTimeout(() => {
+        setOperationFeedback((prev) =>
+          prev?.timestamp === feedback.timestamp ? null : prev
+        );
+      }, clearDelay);
+    },
+    []
+  );
+
+  // 计算预估剩余时间（优化版）
+  const calculateEstimatedTime = useCallback(
+    (currentProgress: number, startTime: Date) => {
+      if (currentProgress <= 0) return "计算中...";
+
+      const elapsed = Date.now() - startTime.getTime();
+      const progressRatio = currentProgress / 100;
+      const estimatedTotal = elapsed / progressRatio;
+      const remaining = estimatedTotal - elapsed;
+
+      if (remaining <= 0) return "即将完成";
+
+      const minutes = Math.floor(remaining / 60000);
+      const seconds = Math.floor((remaining % 60000) / 1000);
+
+      if (minutes > 0) {
+        return `约${minutes}分${seconds}秒`;
+      } else {
+        return `约${seconds}秒`;
+      }
+    },
+    []
+  );
+
+  // 轮询检查诊断状态（优化版 - 适配单次AI调用）
+  const pollDiagnosisStatus = useCallback(
+    async (taskId: string) => {
+      try {
+        const status = await apiClient.aiDiagnosis.getDiagnosisStatus(taskId);
+        setDiagnosisStatus(status);
+
+        if (status.status === "completed" && status.result) {
+          // 诊断完成
+          setAiDiagnosis(status.result);
+          setDiagnosisProgress(100);
+          setCurrentStep(3); // 最后一步
+          setIsPolling(false);
+          cleanupTimers();
+
+          // 显示成功通知
+          notification.success({
+            message: "AI诊断完成",
+            description: "错误分析已完成，请查看诊断结果",
+            duration: 5,
+            placement: "topRight",
+          });
+
+          message.success("AI诊断完成");
+        } else if (status.status === "failed") {
+          // 诊断失败
+          setDiagnosisProgress(0);
+          setCurrentStep(0);
+          setIsPolling(false);
+          cleanupTimers();
+
+          notification.error({
+            message: "AI诊断失败",
+            description: status.error || "诊断过程中发生错误",
+            duration: 5,
+            placement: "topRight",
+          });
+
+          message.error(`AI诊断失败: ${status.error || "未知错误"}`);
+          setAiDiagnosisLoading(false);
+        } else if (status.status === "processing") {
+          // 诊断进行中，更新进度（基于单次AI调用的进度）
+          const progressStep = Math.min(Math.floor(pollCount / 3), 2);
+          setCurrentStep(progressStep);
+          setDiagnosisProgress(Math.min(25 + progressStep * 20, 85));
+
+          // 继续轮询
+          if (pollingRef.current) {
+            clearTimeout(pollingRef.current);
+          }
+          pollingRef.current = setTimeout(
+            () => pollDiagnosisStatus(taskId),
+            2000
+          );
+        } else if (status.status === "pending") {
+          // 等待中，继续轮询
+          if (pollingRef.current) {
+            clearTimeout(pollingRef.current);
+          }
+          pollingRef.current = setTimeout(
+            () => pollDiagnosisStatus(taskId),
+            2000
+          );
+        }
+      } catch (err) {
+        console.error("检查诊断状态失败:", err);
+        setDiagnosisProgress(0);
+        setCurrentStep(0);
+        setIsPolling(false);
+        cleanupTimers();
+        setAiDiagnosisLoading(false);
+
+        notification.error({
+          message: "诊断状态检查失败",
+          description: "无法获取诊断进度，请稍后重试",
+          duration: 5,
+          placement: "topRight",
+        });
+      }
+    },
+    [cleanupTimers, pollCount]
+  );
+
+  // 测试API连接
+  const testApiConnection = async () => {
+    try {
+      console.log("测试API连接...");
+      console.log(
+        "API基础URL:",
+        import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+      );
+
+      // 测试基本连接
+      const testResponse = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+        }/api/health`
+      );
+      console.log("健康检查响应:", testResponse);
+
+      // 测试AI诊断端点
+      const testDiagnosisResponse = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+        }/api/ai-diagnosis/error/1/analyze`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("AI诊断测试响应:", testDiagnosisResponse);
+
+      if (testDiagnosisResponse.ok) {
+        const testData = await testDiagnosisResponse.json();
+        console.log("AI诊断测试数据:", testData);
+      }
+    } catch (err) {
+      console.error("API连接测试失败:", err);
+    }
+  };
+
+  // 触发AI诊断分析（优化版 - 适配单次AI调用）
+  const triggerAiDiagnosis = async () => {
+    if (!error || !error.id) {
+      return;
+    }
+
+    try {
+      // 重置状态
+      setAiDiagnosisLoading(true);
+      setDiagnosisTaskId(null);
+      setDiagnosisStatus(null);
+      setIsPolling(true);
+
+      // 初始化步骤和进度
+      initializeDiagnosisSteps();
+      updateDiagnosisProgress();
+
+      console.log("开始触发AI诊断，错误ID:", error.id);
+
+      // 尝试使用API客户端
+      let response;
+      try {
+        response = await apiClient.aiDiagnosis.triggerDiagnosis(
+          Number(error.id)
+        );
+        console.log("API客户端调用成功:", response);
+      } catch (apiError) {
+        console.warn("API客户端调用失败，尝试直接fetch:", apiError);
+
+        // 备选方案：直接使用fetch
+        const token = localStorage.getItem("token");
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const fetchResponse = await fetch(
+          `${
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+          }/api/ai-diagnosis/error/${error.id}/analyze`,
+          {
+            method: "POST",
+            headers,
+          }
+        );
+
+        if (!fetchResponse.ok) {
+          throw new Error(
+            `HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`
+          );
+        }
+
+        const fetchData = await fetchResponse.json();
+        console.log("直接fetch调用成功:", fetchData);
+
+        if (!fetchData.data) {
+          throw new Error(
+            `直接fetch响应格式错误: ${JSON.stringify(fetchData)}`
+          );
+        }
+
+        response = fetchData.data;
+      }
+
+      console.log("AI诊断API响应:", response);
+
+      // 检查响应是否有效
+      if (!response || typeof response !== "object") {
+        throw new Error(`API响应无效: ${JSON.stringify(response)}`);
+      }
+
+      if (!response.taskId) {
+        throw new Error(`API响应缺少taskId: ${JSON.stringify(response)}`);
+      }
+
+      const { taskId } = response;
+      setDiagnosisTaskId(taskId);
+
+      console.log("诊断任务ID:", taskId);
+
+      // 显示开始通知
+      notification.info({
+        message: "AI诊断已启动",
+        description: "正在分析错误，请稍候...",
+        duration: 3,
+        placement: "topRight",
+      });
+
+      // 开始轮询状态
+      setTimeout(() => pollDiagnosisStatus(taskId), 2000);
+    } catch (err) {
+      console.error("触发AI诊断失败:", err);
+      setAiDiagnosisLoading(false);
+      setIsPolling(false);
+      cleanupTimers();
+
+      // 提供更详细的错误信息
+      let errorMessage = "无法启动AI诊断，请稍后重试";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "string") {
+        errorMessage = err;
+      }
+
+      notification.error({
+        message: "启动诊断失败",
+        description: errorMessage,
+        duration: 8,
+        placement: "topRight",
+      });
+
+      message.error(`触发AI诊断失败: ${errorMessage}`);
+    }
+  };
+
+  // 取消诊断任务
+  const cancelDiagnosis = useCallback(() => {
+    if (diagnosisTaskId) {
+      setIsPolling(false);
+      cleanupTimers();
+      setAiDiagnosisLoading(false);
+      setDiagnosisProgress(0);
+      setCurrentStep(0);
+
+      notification.info({
+        message: "诊断已取消",
+        description: "AI诊断任务已被取消",
+        duration: 3,
+        placement: "topRight",
+      });
+    }
+  }, [diagnosisTaskId, cleanupTimers]);
+
+  // 重新诊断功能（优化版 - 适配单次AI调用）
+  const triggerRediagnosis = async () => {
+    if (!error || !error.id) {
+      showOperationFeedback("error", "操作失败", "无法获取错误信息");
+      return;
+    }
+
+    try {
+      // 重置所有状态
+      setAiDiagnosisLoading(true);
+      setDiagnosisTaskId(null);
+      setDiagnosisStatus(null);
+      setIsPolling(true);
+      setAiDiagnosis(null);
+      setOperationFeedback(null);
+
+      // 显示启动反馈
+      showOperationFeedback("info", "重新诊断已启动", "正在初始化诊断任务...");
+
+      // 初始化步骤和进度
+      initializeDiagnosisSteps();
+      updateDiagnosisProgress();
+
+      console.log("开始重新诊断，错误ID:", error.id);
+
+      // 尝试使用API客户端
+      let response;
+      try {
+        response = await apiClient.aiDiagnosis.triggerDiagnosis(
+          Number(error.id)
+        );
+        console.log("重新诊断API客户端调用成功:", response);
+      } catch (apiError) {
+        console.warn("重新诊断API客户端调用失败，尝试直接fetch:", apiError);
+
+        // 备选方案：直接使用fetch
+        const token = localStorage.getItem("token");
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+        };
+
+        if (token) {
+          headers.Authorization = `Bearer ${token}`;
+        }
+
+        const fetchResponse = await fetch(
+          `${
+            import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+          }/api/ai-diagnosis/error/${error.id}/analyze`,
+          {
+            method: "POST",
+            headers,
+          }
+        );
+
+        if (!fetchResponse.ok) {
+          throw new Error(
+            `HTTP ${fetchResponse.status}: ${fetchResponse.statusText}`
+          );
+        }
+
+        const fetchData = await fetchResponse.json();
+        console.log("重新诊断直接fetch调用成功:", fetchData);
+
+        if (!fetchData.data) {
+          throw new Error(
+            `直接fetch响应格式错误: ${JSON.stringify(fetchData)}`
+          );
+        }
+
+        response = fetchData.data;
+      }
+
+      console.log("重新诊断API响应:", response);
+
+      // 检查响应是否有效
+      if (!response || typeof response !== "object") {
+        throw new Error(`API响应无效: ${JSON.stringify(response)}`);
+      }
+
+      if (!response.taskId) {
+        throw new Error(`API响应缺少taskId: ${JSON.stringify(response)}`);
+      }
+
+      const { taskId } = response;
+      setDiagnosisTaskId(taskId);
+
+      console.log("重新诊断任务ID:", taskId);
+
+      // 显示任务创建成功反馈
+      showOperationFeedback("success", "诊断任务已创建", `任务ID: ${taskId}`);
+
+      // 开始实时轮询状态
+      startRealTimePolling(taskId);
+    } catch (err) {
+      console.error("重新诊断失败:", err);
+      setAiDiagnosisLoading(false);
+      setIsPolling(false);
+      cleanupTimers();
+
+      // 提供更详细的错误信息
+      let errorMessage = "无法启动重新诊断，请稍后重试";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      } else if (typeof err === "string") {
+        errorMessage = err;
+      }
+
+      showOperationFeedback("error", "重新诊断失败", errorMessage);
+    }
+  };
+
+  // 实时轮询诊断状态（优化版 - 适配单次AI调用）
+  const startRealTimePolling = useCallback(async (taskId: string) => {
+    const pollInterval = 1500; // 更频繁的轮询，1.5秒一次
+    let currentPollCount = 0;
+    const maxPolls = 120; // 最多轮询3分钟
+
+    const poll = async () => {
+      try {
+        currentPollCount++;
+        setPollCount(currentPollCount);
+        console.log(`第${currentPollCount}次轮询诊断状态，任务ID: ${taskId}`);
+
+        const status = await apiClient.aiDiagnosis.getDiagnosisStatus(taskId);
+        setDiagnosisStatus(status);
+        setLastUpdateTime(new Date());
+
+        console.log("诊断状态更新:", status);
+
+        if (status.status === "completed" && status.result) {
+          // 诊断完成
+          handleDiagnosisComplete(status.result, taskId);
+        } else if (status.status === "failed") {
+          // 诊断失败
+          handleDiagnosisFailed(status.error || "诊断过程中发生错误", taskId);
+        } else if (status.status === "processing") {
+          // 诊断进行中，更新进度（基于单次AI调用的进度）
+          handleDiagnosisProcessing(status, currentPollCount);
+
+          // 继续轮询
+          if (currentPollCount < maxPolls) {
+            setTimeout(poll, pollInterval);
+          } else {
+            handleDiagnosisTimeout(taskId);
+          }
+        } else if (status.status === "pending") {
+          // 等待中，显示等待状态
+          handleDiagnosisPending(status, currentPollCount);
+
+          // 继续轮询
+          if (currentPollCount < maxPolls) {
+            setTimeout(poll, pollInterval);
+          } else {
+            handleDiagnosisTimeout(taskId);
+          }
+        }
+      } catch (err) {
+        console.error(`第${currentPollCount}次轮询失败:`, err);
+
+        // 轮询失败时，尝试继续
+        if (currentPollCount < maxPolls) {
+          setTimeout(poll, pollInterval);
+        } else {
+          handleDiagnosisTimeout(taskId);
+        }
+      }
+    };
+
+    // 开始轮询
+    setTimeout(poll, pollInterval);
+  }, []);
+
+  // 处理诊断完成
+  const handleDiagnosisComplete = useCallback(
+    (result: any, taskId: string) => {
+      console.log("诊断完成，结果:", result);
+
+      setAiDiagnosis(result);
+      setDiagnosisProgress(100);
+      setCurrentStep(3); // 最后一步
+      setIsPolling(false);
+      setAiDiagnosisLoading(false);
+      cleanupTimers();
+      setEstimatedTimeRemaining("已完成");
+
+      // 显示成功反馈
+      showOperationFeedback(
+        "success",
+        "AI诊断完成",
+        "诊断已完成，正在生成综合分析报告..."
+      );
+
+      // 自动生成综合分析报告
+      if (error && result && sourceCode) {
+        console.log("诊断完成后自动生成综合分析报告");
+        // 延迟一下再生成，确保状态更新完成
+        setTimeout(() => {
+          generateComprehensiveReport();
+        }, 1000);
+      } else {
+        console.log("缺少必要信息，无法自动生成综合分析报告:", {
+          hasError: !!error,
+          hasDiagnosis: !!result,
+          hasSourceCode: !!sourceCode,
+        });
+      }
+
+      // 尝试加载已存在的综合分析报告
+      setTimeout(() => {
+        loadComprehensiveAnalysisReport();
+      }, 2000); // 延迟2秒，确保报告生成完成
+    },
+    [error, sourceCode, cleanupTimers, showOperationFeedback]
+  );
+
+  // 处理诊断失败
+  const handleDiagnosisFailed = useCallback(
+    (error: string, taskId: string) => {
+      console.log("诊断失败:", error);
+
+      setDiagnosisProgress(0);
+      setCurrentStep(0);
+      setIsPolling(false);
+      cleanupTimers();
+      setEstimatedTimeRemaining("");
+
+      showOperationFeedback("error", "重新诊断失败", error);
+      setAiDiagnosisLoading(false);
+    },
+    [cleanupTimers, showOperationFeedback]
+  );
+
+  // 处理诊断进行中（优化版 - 基于单次AI调用的进度）
+  const handleDiagnosisProcessing = useCallback(
+    (status: any, currentPollCount: number) => {
+      console.log("诊断进行中，轮询次数:", currentPollCount);
+
+      // 基于单次AI调用的进度更新
+      const progress = Math.min(25 + currentPollCount * 15, 85);
+      setDiagnosisProgress(progress);
+
+      // 更新当前步骤（基于单次AI调用的步骤）
+      const step = Math.min(Math.floor(currentPollCount / 8), 2);
+      setCurrentStep(step);
+
+      // 计算预估剩余时间
+      if (diagnosisStartTime) {
+        const estimated = calculateEstimatedTime(progress, diagnosisStartTime);
+        setEstimatedTimeRemaining(estimated);
+      }
+
+      // 如果有阶段性结果，可以在这里处理
+      if (status.partialResult) {
+        console.log("阶段性结果:", status.partialResult);
+        // 可以在这里更新UI显示阶段性结果
+      }
+    },
+    [diagnosisStartTime, calculateEstimatedTime]
+  );
+
+  // 处理诊断等待中（优化版）
+  const handleDiagnosisPending = useCallback(
+    (status: any, currentPollCount: number) => {
+      console.log("诊断等待中，轮询次数:", currentPollCount);
+
+      // 显示等待状态
+      setDiagnosisProgress(Math.min(currentPollCount * 5, 25));
+      setCurrentStep(0);
+
+      // 计算预估剩余时间
+      if (diagnosisStartTime) {
+        const estimated = calculateEstimatedTime(
+          Math.min(currentPollCount * 5, 25),
+          diagnosisStartTime
+        );
+        setEstimatedTimeRemaining(estimated);
+      }
+    },
+    [diagnosisStartTime, calculateEstimatedTime]
+  );
+
+  // 处理诊断超时
+  const handleDiagnosisTimeout = useCallback(
+    (taskId: string) => {
+      console.log("诊断超时，任务ID:", taskId);
+
+      setDiagnosisProgress(0);
+      setCurrentStep(0);
+      setIsPolling(false);
+      cleanupTimers();
+      setAiDiagnosisLoading(false);
+      setEstimatedTimeRemaining("");
+
+      showOperationFeedback(
+        "warning",
+        "诊断超时",
+        "诊断时间过长，请稍后重试或联系管理员"
+      );
+    },
+    [cleanupTimers, showOperationFeedback]
+  );
+
+  // 生成综合分析报告（优化版 - 适配后台单次AI调用）
+  const generateComprehensiveReport = useCallback(async () => {
+    if (!error || !aiDiagnosis) {
+      showOperationFeedback(
+        "warning",
+        "无法生成报告",
+        "缺少错误信息或AI诊断结果"
+      );
+      return;
+    }
+
+    try {
+      setComprehensiveAnalysisLoading(true);
+
+      // 构建分析请求数据（适配后台单次AI调用）
+      const analysisData = {
+        errorId: error.id,
+        errorMessage: error.errorMessage,
+        errorStack: error.errorStack,
+        sourceFile: error.sourceFile,
+        sourceLine: error.sourceLine,
+        projectVersion: error.projectVersion,
+        aiDiagnosis: aiDiagnosis,
+        sourceCode: sourceCode,
+        timestamp: new Date().toISOString(),
+      };
+
+      console.log("开始生成综合分析报告:", analysisData);
+
+      // 调用后端API生成综合分析报告（后台已优化为单次AI调用）
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+        }/api/ai-diagnosis/comprehensive-analysis`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify(analysisData),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const reportData = await response.json();
+      console.log("综合分析报告生成成功:", reportData);
+
+      setComprehensiveReport(reportData.data || reportData);
+
+      showOperationFeedback(
+        "success",
+        "综合分析报告已生成",
+        "基于单次AI调用的深度分析已完成，效率提升显著"
+      );
+    } catch (err) {
+      console.error("生成综合分析报告失败:", err);
+
+      let errorMessage = "无法生成综合分析报告，请稍后重试";
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+
+      showOperationFeedback("error", "报告生成失败", errorMessage);
+    } finally {
+      setComprehensiveAnalysisLoading(false);
+    }
+  }, [error, aiDiagnosis, sourceCode, showOperationFeedback]);
+
+  // 组件卸载时清理定时器
+  useEffect(() => {
+    return () => {
+      cleanupTimers();
+    };
+  }, [cleanupTimers]);
+
   // 当切换到源代码标签时加载源代码
   useEffect(() => {
     if (activeTab === "2" && !sourceCode && error) {
       loadSourceCode();
     }
   }, [activeTab, sourceCode, error]);
+
+  // 当切换到AI诊断标签时加载AI诊断
+  useEffect(() => {
+    if (activeTab === "4" && !aiDiagnosis && error) {
+      loadAiDiagnosis();
+    }
+  }, [activeTab, aiDiagnosis, error]);
+
+  // 加载综合分析报告
+  const loadComprehensiveAnalysisReport = async () => {
+    if (!error || !error.id) {
+      return;
+    }
+
+    try {
+      setComprehensiveAnalysisLoading(true);
+      console.log(`开始加载错误ID ${error.id} 的综合分析报告`);
+
+      // 尝试从数据库获取已存储的综合分析报告
+      const response = await fetch(
+        `${
+          import.meta.env.VITE_API_BASE_URL || "http://localhost:3001"
+        }/api/ai-diagnosis/comprehensive-analysis/${error.id}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        const reportData = await response.json();
+        console.log(`从数据库获取到综合分析报告: ${error.id}`, reportData);
+        setComprehensiveReport(reportData);
+      } else if (response.status === 404) {
+        console.log(`错误ID ${error.id} 的综合分析报告不存在，需要生成`);
+        setComprehensiveReport(null);
+      } else {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+    } catch (err) {
+      console.error(`加载综合分析报告失败: ${error.id}`, err);
+      // 加载失败不影响其他功能，只记录日志
+    } finally {
+      setComprehensiveAnalysisLoading(false);
+    }
+  };
 
   // 返回列表
   const handleBack = () => {
@@ -159,6 +1064,614 @@ const ErrorDetail: React.FC = () => {
           </Descriptions.Item>
         ))}
       </Descriptions>
+    );
+  };
+
+  // 渲染AI诊断结果
+  const renderAiDiagnosis = () => {
+    if (aiDiagnosisLoading && isPolling) {
+      return (
+        <div className="ai-diagnosis-loading">
+          <Card title="AI诊断进行中" className="diagnosis-progress-card">
+            {/* 任务状态指示器 */}
+            <div className="task-status-indicator">
+              <Space
+                direction="vertical"
+                size="large"
+                style={{ width: "100%" }}
+              >
+                {/* 进度条 */}
+                <div className="progress-section">
+                  <Text strong>诊断进度</Text>
+                  <Progress
+                    percent={diagnosisProgress}
+                    status={diagnosisProgress >= 100 ? "success" : "active"}
+                    strokeColor={{
+                      "0%": "#108ee9",
+                      "100%": "#87d068",
+                    }}
+                    showInfo={true}
+                    format={(percent) => `${percent?.toFixed(1)}%`}
+                  />
+
+                  {/* 实时状态信息 */}
+                  <div className="real-time-status" style={{ marginTop: 12 }}>
+                    <Space
+                      size="small"
+                      direction="vertical"
+                      style={{ width: "100%" }}
+                    >
+                      <div>
+                        <Badge
+                          status={
+                            diagnosisStatus?.status === "processing"
+                              ? "processing"
+                              : diagnosisStatus?.status === "pending"
+                              ? "default"
+                              : diagnosisStatus?.status === "completed"
+                              ? "success"
+                              : diagnosisStatus?.status === "failed"
+                              ? "error"
+                              : "default"
+                          }
+                          text={
+                            diagnosisStatus?.status === "processing"
+                              ? "分析中"
+                              : diagnosisStatus?.status === "pending"
+                              ? "等待中"
+                              : diagnosisStatus?.status === "completed"
+                              ? "已完成"
+                              : diagnosisStatus?.status === "failed"
+                              ? "失败"
+                              : "未知"
+                          }
+                        />
+                        {diagnosisStatus?.message && (
+                          <Text
+                            type="secondary"
+                            style={{ fontSize: "12px", marginLeft: 8 }}
+                          >
+                            {diagnosisStatus.message}
+                          </Text>
+                        )}
+                      </div>
+
+                      {/* 实时统计信息 */}
+                      {isPolling && (
+                        <div className="real-time-stats">
+                          <Row gutter={16}>
+                            <Col span={8}>
+                              <Statistic
+                                title="轮询次数"
+                                value={pollCount}
+                                prefix={<SyncOutlined spin />}
+                                valueStyle={{ fontSize: "14px" }}
+                              />
+                            </Col>
+                            <Col span={8}>
+                              <Statistic
+                                title="运行时间"
+                                value={
+                                  diagnosisStartTime
+                                    ? Math.floor(
+                                        (Date.now() -
+                                          diagnosisStartTime.getTime()) /
+                                          1000
+                                      )
+                                    : 0
+                                }
+                                suffix="秒"
+                                valueStyle={{ fontSize: "14px" }}
+                              />
+                            </Col>
+                            <Col span={8}>
+                              <Statistic
+                                title="预估剩余"
+                                value={estimatedTimeRemaining}
+                                valueStyle={{
+                                  fontSize: "14px",
+                                  color: "#1890ff",
+                                }}
+                              />
+                            </Col>
+                          </Row>
+                        </div>
+                      )}
+                    </Space>
+                  </div>
+                </div>
+
+                {/* 步骤指示器 */}
+                <div className="steps-section">
+                  <Text strong>当前步骤</Text>
+                  <Steps
+                    current={currentStep}
+                    direction="vertical"
+                    size="small"
+                    style={{ marginTop: 16 }}
+                  >
+                    {diagnosisSteps
+                      .slice(0, 5)
+                      .map((step: string, index: number) => (
+                        <Step
+                          key={index}
+                          title={step}
+                          icon={
+                            index === currentStep ? (
+                              <SyncOutlined spin />
+                            ) : undefined
+                          }
+                          status={
+                            index < currentStep
+                              ? "finish"
+                              : index === currentStep
+                              ? "process"
+                              : "wait"
+                          }
+                        />
+                      ))}
+                  </Steps>
+
+                  {/* 阶段性结果展示 */}
+                  {diagnosisStatus?.partialResult && (
+                    <div className="partial-results" style={{ marginTop: 16 }}>
+                      <Divider orientation="left">
+                        <BulbOutlined /> 阶段性分析结果
+                      </Divider>
+                      <div className="partial-result-content">
+                        <Alert
+                          message="AI正在分析中，以下是已完成的初步结果："
+                          description={
+                            <div>
+                              {diagnosisStatus.partialResult.analysis && (
+                                <div style={{ marginBottom: 8 }}>
+                                  <Text strong>初步分析：</Text>
+                                  <Text>
+                                    {diagnosisStatus.partialResult.analysis}
+                                  </Text>
+                                </div>
+                              )}
+                              {diagnosisStatus.partialResult.possibleCauses && (
+                                <div style={{ marginBottom: 8 }}>
+                                  <Text strong>已识别原因：</Text>
+                                  <ul
+                                    style={{ margin: "4px 0", paddingLeft: 16 }}
+                                  >
+                                    {diagnosisStatus.partialResult.possibleCauses.map(
+                                      (cause: string, idx: number) => (
+                                        <li key={idx}>{cause}</li>
+                                      )
+                                    )}
+                                  </ul>
+                                </div>
+                              )}
+                            </div>
+                          }
+                          type="info"
+                          showIcon
+                          style={{ textAlign: "left" }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* 操作反馈显示 */}
+                {operationFeedback && (
+                  <div
+                    className="operation-feedback"
+                    style={{ marginBottom: 16 }}
+                  >
+                    <Alert
+                      message={operationFeedback.message}
+                      description={
+                        <div>
+                          <div>{operationFeedback.description}</div>
+                          <div
+                            style={{
+                              marginTop: 8,
+                              fontSize: "12px",
+                              color: "#8c8c8c",
+                            }}
+                          >
+                            时间:{" "}
+                            {operationFeedback.timestamp.toLocaleTimeString()}
+                          </div>
+                        </div>
+                      }
+                      type={operationFeedback.type}
+                      showIcon
+                      closable
+                      onClose={() => setOperationFeedback(null)}
+                      style={{
+                        border: `1px solid ${
+                          operationFeedback.type === "success"
+                            ? "#52c41a"
+                            : operationFeedback.type === "info"
+                            ? "#1890ff"
+                            : operationFeedback.type === "warning"
+                            ? "#faad14"
+                            : "#ff4d4f"
+                        }`,
+                        backgroundColor: `${
+                          operationFeedback.type === "success"
+                            ? "rgba(82, 196, 26, 0.1)"
+                            : operationFeedback.type === "info"
+                            ? "rgba(24, 144, 255, 0.1)"
+                            : operationFeedback.type === "warning"
+                            ? "rgba(250, 173, 20, 0.1)"
+                            : "rgba(255, 77, 79, 0.1)"
+                        }`,
+                      }}
+                    />
+                  </div>
+                )}
+
+                {/* 任务信息 */}
+                {diagnosisTaskId && (
+                  <div className="task-info">
+                    <Descriptions column={1} size="small" bordered>
+                      <Descriptions.Item label="任务ID">
+                        <Text code copyable>
+                          {diagnosisTaskId}
+                        </Text>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="任务状态">
+                        <Badge
+                          status={
+                            diagnosisStatus?.status === "processing"
+                              ? "processing"
+                              : diagnosisStatus?.status === "pending"
+                              ? "default"
+                              : diagnosisStatus?.status === "completed"
+                              ? "success"
+                              : diagnosisStatus?.status === "failed"
+                              ? "error"
+                              : "default"
+                          }
+                          text={
+                            diagnosisStatus?.status === "processing"
+                              ? "处理中"
+                              : diagnosisStatus?.status === "pending"
+                              ? "等待中"
+                              : diagnosisStatus?.status === "completed"
+                              ? "已完成"
+                              : diagnosisStatus?.status === "failed"
+                              ? "失败"
+                              : "未知"
+                          }
+                        />
+                      </Descriptions.Item>
+                      <Descriptions.Item label="开始时间">
+                        <Text type="secondary">
+                          {diagnosisStartTime?.toLocaleTimeString() || "未知"}
+                        </Text>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="最后更新">
+                        <Text type="secondary">
+                          {lastUpdateTime?.toLocaleTimeString() || "未知"}
+                        </Text>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="轮询次数">
+                        <Text type="secondary">{pollCount} 次</Text>
+                      </Descriptions.Item>
+                      <Descriptions.Item label="预估剩余时间">
+                        <Text type="secondary">
+                          {estimatedTimeRemaining || "计算中..."}
+                        </Text>
+                      </Descriptions.Item>
+                      {diagnosisStatus?.message && (
+                        <Descriptions.Item label="状态信息">
+                          <Text type="secondary">
+                            {diagnosisStatus.message}
+                          </Text>
+                        </Descriptions.Item>
+                      )}
+                    </Descriptions>
+                  </div>
+                )}
+
+                {/* 操作按钮 */}
+                <div className="diagnosis-actions">
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<SyncOutlined />}
+                      loading={true}
+                      disabled
+                    >
+                      诊断进行中...
+                    </Button>
+                    <Button
+                      danger
+                      icon={<CloseCircleOutlined />}
+                      onClick={cancelDiagnosis}
+                    >
+                      取消诊断
+                    </Button>
+                  </Space>
+                </div>
+
+                <Alert
+                  message="诊断进行中"
+                  description="AI正在分析错误信息，请耐心等待。诊断完成后会自动显示结果。"
+                  type="info"
+                  showIcon
+                  icon={<RobotOutlined />}
+                />
+              </Space>
+            </div>
+          </Card>
+        </div>
+      );
+    }
+
+    if (!aiDiagnosis) {
+      return (
+        <div className="no-ai-diagnosis">
+          <Alert
+            message="暂无AI诊断"
+            description={
+              <>
+                <p>此错误尚未进行AI诊断分析。</p>
+                <p>AI诊断将帮助您：</p>
+                <ul>
+                  <li>快速识别错误的根本原因</li>
+                  <li>提供针对性的修复建议</li>
+                  <li>减少调试时间</li>
+                </ul>
+                <Space>
+                  <Button
+                    type="primary"
+                    icon={<RobotOutlined />}
+                    onClick={triggerAiDiagnosis}
+                    loading={aiDiagnosisLoading}
+                  >
+                    开始AI诊断
+                  </Button>
+                  <Button icon={<CodeOutlined />} onClick={testApiConnection}>
+                    测试API连接
+                  </Button>
+                </Space>
+              </>
+            }
+            type="info"
+            showIcon
+          />
+        </div>
+      );
+    }
+
+    return (
+      <div className="ai-diagnosis-container">
+        {/* 诊断完成状态指示 */}
+        {diagnosisProgress >= 100 && (
+          <Card
+            className="diagnosis-complete-card"
+            style={{
+              marginBottom: 16,
+              background: "#f6ffed",
+              border: "1px solid #b7eb8f",
+            }}
+          >
+            <Result
+              status="success"
+              title="AI诊断已完成"
+              subTitle={`诊断任务 ${diagnosisTaskId} 已成功完成`}
+              extra={[
+                <Button
+                  key="refresh"
+                  icon={<ReloadOutlined />}
+                  onClick={loadAiDiagnosis}
+                >
+                  刷新结果
+                </Button>,
+                <Button
+                  key="rediagnose"
+                  type="primary"
+                  icon={<RobotOutlined />}
+                  onClick={triggerRediagnosis}
+                >
+                  重新诊断
+                </Button>,
+              ]}
+            />
+          </Card>
+        )}
+
+        <Card title="AI诊断结果" className="ai-diagnosis-card">
+          {/* 诊断概览 */}
+          <Descriptions
+            bordered
+            column={2}
+            size="small"
+            className="ai-diagnosis-summary"
+          >
+            <Descriptions.Item label="严重程度">
+              <Tag
+                color={
+                  aiDiagnosis.severity === "high"
+                    ? "red"
+                    : aiDiagnosis.severity === "medium"
+                    ? "orange"
+                    : "green"
+                }
+              >
+                {aiDiagnosis.severity === "high"
+                  ? "高"
+                  : aiDiagnosis.severity === "medium"
+                  ? "中"
+                  : "低"}
+              </Tag>
+            </Descriptions.Item>
+            <Descriptions.Item label="诊断时间">
+              {aiDiagnosis.createdAt
+                ? formatDateTime(aiDiagnosis.createdAt)
+                : "刚刚"}
+            </Descriptions.Item>
+          </Descriptions>
+
+          {/* 错误分析 */}
+          <Divider orientation="left">
+            <FileTextOutlined /> 错误分析
+          </Divider>
+          <div className="diagnosis-content">
+            <Paragraph>{aiDiagnosis.analysis}</Paragraph>
+          </div>
+
+          {/* 可能原因 */}
+          {aiDiagnosis.possibleCauses &&
+            aiDiagnosis.possibleCauses.length > 0 && (
+              <>
+                <Divider orientation="left">
+                  <BulbOutlined /> 可能原因
+                </Divider>
+                <div className="possible-causes">
+                  <List
+                    size="small"
+                    dataSource={aiDiagnosis.possibleCauses}
+                    renderItem={(cause: string, index: number) => (
+                      <List.Item>
+                        <Text>
+                          {index + 1}. {cause}
+                        </Text>
+                      </List.Item>
+                    )}
+                  />
+                </div>
+              </>
+            )}
+
+          {/* 修复建议 */}
+          {aiDiagnosis.fixSuggestions &&
+            aiDiagnosis.fixSuggestions.length > 0 && (
+              <>
+                <Divider orientation="left">
+                  <BulbOutlined /> 修复建议
+                </Divider>
+                <div className="fix-suggestions">
+                  <List
+                    size="small"
+                    dataSource={aiDiagnosis.fixSuggestions}
+                    renderItem={(suggestion: string, index: number) => (
+                      <List.Item>
+                        <Text>
+                          {index + 1}. {suggestion}
+                        </Text>
+                      </List.Item>
+                    )}
+                  />
+                </div>
+              </>
+            )}
+
+          {/* 预防措施 */}
+          {aiDiagnosis.preventionMeasures && (
+            <>
+              <Divider orientation="left">
+                <SafetyOutlined /> 预防措施
+              </Divider>
+              <div className="prevention-measures">
+                <Paragraph>{aiDiagnosis.preventionMeasures}</Paragraph>
+              </div>
+            </>
+          )}
+
+          {/* 代码定位信息 */}
+          {aiDiagnosis.exactLocation && (
+            <>
+              <Divider orientation="left">
+                <CodeOutlined /> 代码定位
+              </Divider>
+              <div className="code-location">
+                <Descriptions column={2} size="small" bordered>
+                  {aiDiagnosis.exactLocation.file && (
+                    <Descriptions.Item label="文件路径">
+                      <Text code>{aiDiagnosis.exactLocation.file}</Text>
+                    </Descriptions.Item>
+                  )}
+                  {aiDiagnosis.exactLocation.line && (
+                    <Descriptions.Item label="行号">
+                      <Text code>{aiDiagnosis.exactLocation.line}</Text>
+                    </Descriptions.Item>
+                  )}
+                  {aiDiagnosis.exactLocation.column && (
+                    <Descriptions.Item label="列号">
+                      <Text code>{aiDiagnosis.exactLocation.column}</Text>
+                    </Descriptions.Item>
+                  )}
+                  {aiDiagnosis.exactLocation.function && (
+                    <Descriptions.Item label="函数名">
+                      <Text code>{aiDiagnosis.exactLocation.function}</Text>
+                    </Descriptions.Item>
+                  )}
+                </Descriptions>
+              </div>
+            </>
+          )}
+
+          {/* 综合分析报告 */}
+          <Divider orientation="left">
+            <BulbOutlined /> 综合分析报告
+          </Divider>
+          <div className="comprehensive-analysis">
+            <ComprehensiveAnalysisReport
+              error={error}
+              aiDiagnosis={aiDiagnosis}
+              sourceCode={sourceCode}
+              loading={comprehensiveAnalysisLoading}
+            />
+          </div>
+
+          <Divider orientation="left">
+            <ClockCircleOutlined /> 诊断依据
+          </Divider>
+          <div className="diagnosis-basis">
+            <Text type="secondary">本诊断基于以下信息生成：</Text>
+            <ul>
+              <li>错误消息: {error?.errorMessage}</li>
+              <li>错误类型: {error?.type}</li>
+              <li>错误堆栈: {error?.errorStack?.split("\n")[0]}</li>
+              {error?.sourceFile && <li>源文件: {error.sourceFile}</li>}
+              {error?.sourceLine && <li>行号: {error.sourceLine}</li>}
+              {error?.projectVersion && (
+                <li>项目版本: {error.projectVersion}</li>
+              )}
+            </ul>
+          </div>
+
+          <Divider />
+          <div className="ai-diagnosis-actions">
+            <Space>
+              <Button
+                type="primary"
+                icon={<RobotOutlined />}
+                onClick={triggerRediagnosis}
+                loading={aiDiagnosisLoading && isPolling}
+                disabled={isPolling}
+              >
+                {isPolling ? "诊断进行中..." : "重新诊断"}
+              </Button>
+              <Button
+                icon={<ReloadOutlined />}
+                onClick={loadAiDiagnosis}
+                disabled={aiDiagnosisLoading}
+              >
+                刷新结果
+              </Button>
+              {isPolling && (
+                <Button
+                  danger
+                  icon={<CloseCircleOutlined />}
+                  onClick={cancelDiagnosis}
+                >
+                  取消诊断
+                </Button>
+              )}
+            </Space>
+          </div>
+        </Card>
+      </div>
     );
   };
 
@@ -418,6 +1931,68 @@ const ErrorDetail: React.FC = () => {
             <Divider orientation="left">网络信息</Divider>
             {renderDeviceInfo(error.networkInfo)}
           </Card>
+        </TabPane>
+
+        <TabPane
+          tab={
+            <span>
+              <RobotOutlined />
+              AI诊断
+            </span>
+          }
+          key="4"
+        >
+          <div className="ai-diagnosis-tab">
+            {/* AI诊断历史记录 */}
+            {aiDiagnosis && (
+              <Card
+                title={
+                  <span>
+                    <HistoryOutlined /> 诊断历史
+                  </span>
+                }
+                className="diagnosis-history-card"
+                style={{ marginBottom: 16 }}
+              >
+                <Timeline>
+                  <Timeline.Item
+                    dot={<RobotOutlined style={{ fontSize: "16px" }} />}
+                    color="blue"
+                  >
+                    <div className="timeline-content">
+                      <Text strong>最新诊断</Text>
+                      <br />
+                      <Text type="secondary">
+                        {aiDiagnosis.createdAt
+                          ? formatDateTime(aiDiagnosis.createdAt)
+                          : "刚刚完成"}
+                      </Text>
+                      <br />
+                      <Tag
+                        color={
+                          aiDiagnosis.severity === "high"
+                            ? "red"
+                            : aiDiagnosis.severity === "medium"
+                            ? "orange"
+                            : "green"
+                        }
+                      >
+                        {aiDiagnosis.severity === "high"
+                          ? "高"
+                          : aiDiagnosis.severity === "medium"
+                          ? "中"
+                          : "低"}{" "}
+                        严重程度
+                      </Tag>
+                    </div>
+                  </Timeline.Item>
+                </Timeline>
+              </Card>
+            )}
+
+            {/* 主要AI诊断内容 */}
+            {renderAiDiagnosis()}
+          </div>
         </TabPane>
       </Tabs>
     </div>

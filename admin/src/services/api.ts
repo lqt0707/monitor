@@ -36,6 +36,8 @@ import type {
   BatchUploadSourcemapResponse,
 } from "../types/sourcemap";
 
+import type { AiDiagnosisResult, DiagnosisTaskStatus } from "../types/monitor";
+
 // API 基础配置
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -510,6 +512,135 @@ class ApiClient {
         ApiResponse<BatchUploadSourcemapResponse>
       >("/api/sourcemap-upload/batch-upload", data);
       return response.data.data;
+    },
+  };
+
+  /**
+   * AI诊断相关接口
+   */
+  aiDiagnosis = {
+    /**
+     * 获取错误诊断结果
+     * @param errorId 错误ID
+     * @returns 诊断结果
+     */
+    getErrorDiagnosis: async (errorId: number): Promise<AiDiagnosisResult> => {
+      try {
+        console.log("获取错误诊断结果，错误ID:", errorId);
+
+        const response = await this.instance.get<AiDiagnosisResult>(
+          `/api/ai-diagnosis/error/${errorId}`
+        );
+
+        console.log("获取诊断结果响应:", response);
+        console.log("响应数据:", response.data);
+
+        // 后端直接返回数据，不是ApiResponse格式
+        if (!response.data) {
+          throw new Error("获取诊断结果失败：响应数据为空");
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error("获取错误诊断结果失败:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * 触发错误诊断分析
+     * @param errorId 错误ID
+     * @returns 诊断任务ID
+     */
+    triggerDiagnosis: async (errorId: number): Promise<{ taskId: string }> => {
+      try {
+        console.log("API客户端调用开始，错误ID:", errorId);
+        console.log("请求URL:", `/api/ai-diagnosis/error/${errorId}/analyze`);
+
+        const response = await this.instance.post<
+          ApiResponse<{ taskId: string }>
+        >(`/api/ai-diagnosis/error/${errorId}/analyze`);
+
+        console.log("API客户端原始响应:", response);
+        console.log("响应状态:", response.status);
+        console.log("响应数据:", response.data);
+
+        if (!response.data) {
+          throw new Error("API响应数据为空");
+        }
+
+        if (!response.data.data) {
+          throw new Error(`API响应格式错误: ${JSON.stringify(response.data)}`);
+        }
+
+        const result = response.data.data;
+        console.log("API客户端返回结果:", result);
+
+        return result;
+      } catch (error) {
+        console.error("API客户端调用失败:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * 获取诊断任务状态
+     * @param taskId 任务ID
+     * @returns 任务状态
+     */
+    getDiagnosisStatus: async (
+      taskId: string
+    ): Promise<DiagnosisTaskStatus> => {
+      try {
+        console.log("获取诊断任务状态，任务ID:", taskId);
+
+        const response = await this.instance.get<DiagnosisTaskStatus>(
+          `/api/ai-diagnosis/task/${taskId}`
+        );
+
+        console.log("获取诊断状态响应:", response);
+        console.log("响应数据:", response.data);
+
+        // 后端直接返回数据，不是ApiResponse格式
+        if (!response.data) {
+          throw new Error("获取诊断状态失败：响应数据为空");
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error("获取诊断任务状态失败:", error);
+        throw error;
+      }
+    },
+
+    /**
+     * 获取错误聚合诊断结果
+     * @param aggregationId 聚合ID
+     * @returns 诊断结果
+     */
+    getAggregationDiagnosis: async (
+      aggregationId: number
+    ): Promise<AiDiagnosisResult> => {
+      try {
+        console.log("获取错误聚合诊断结果，聚合ID:", aggregationId);
+
+        const response = await this.instance.get<AiDiagnosisResult>(
+          `/api/ai-diagnosis/aggregation/${aggregationId}`
+        );
+
+        console.log("获取聚合诊断响应:", response);
+        console.log("响应数据:", response.data);
+
+        // 后端直接返回数据，不是ApiResponse格式
+        if (!response.data) {
+          throw new Error("获取聚合诊断结果失败：响应数据为空");
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error("获取错误聚合诊断结果失败:", error);
+        throw error;
+      }
     },
   };
 }

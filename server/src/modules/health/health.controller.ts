@@ -6,29 +6,44 @@ import { HealthService, HealthCheckResult } from './health.service';
  * 健康检查控制器
  */
 @ApiTags('健康检查')
-@Controller('health')
+@Controller(['health', 'api/health'])
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
   /**
    * 基础健康检查
+   * 用于Docker健康检查和系统状态监控
    * @returns 健康状态
    */
   @Get()
-  @ApiOperation({ summary: '基础健康检查' })
+  @ApiOperation({ summary: '基础健康检查', description: '用于Docker健康检查和系统状态监控' })
   @ApiResponse({ 
     status: 200, 
     description: '服务健康',
     schema: {
       type: 'object',
       properties: {
-        status: { type: 'string', example: 'healthy' },
-        timestamp: { type: 'number', example: 1640995200000 }
+        status: { type: 'string', example: 'ok' },
+        timestamp: { type: 'string', format: 'date-time', example: '2024-01-01T00:00:00.000Z' },
+        uptime: { type: 'number', example: 3600 },
+        service: { type: 'string', example: 'monitor-server' },
+        version: { type: 'string', example: '1.0.0' }
       }
     }
   })
+  @ApiResponse({ 
+    status: 503, 
+    description: '服务不可用'
+  })
   async checkHealth() {
-    return await this.healthService.getSimpleHealth();
+    const health = await this.healthService.getSimpleHealth();
+    return {
+      status: health.status === 'healthy' ? 'ok' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      service: 'monitor-server',
+      version: process.env.npm_package_version || '1.0.0'
+    };
   }
 
   /**

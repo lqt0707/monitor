@@ -84,3 +84,534 @@
         font-size: 18px;
     }
 }
+
+/* AI诊断模块样式 */
+.ai-diagnosis-tab {
+    min-height: 400px;
+}
+
+.diagnosis-history-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border: 1px solid #e8e8e8;
+}
+
+.timeline-content {
+    padding: 8px 0;
+}
+
+.ai-diagnosis-container {
+    margin-top: 16px;
+}
+
+.ai-diagnosis-card {
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ai-diagnosis-summary {
+    margin-bottom: 24px;
+}
+
+.diagnosis-content,
+.possible-causes,
+.fix-suggestions,
+.prevention-measures,
+.code-location,
+.diagnosis-basis {
+    margin: 16px 0;
+    padding: 16px;
+    background: #fafafa;
+    border-radius: 6px;
+    border-left: 4px solid #1890ff;
+}
+
+.possible-causes .ant-list-item,
+.fix-suggestions .ant-list-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.possible-causes .ant-list-item:last-child,
+.fix-suggestions .ant-list-item:last-child {
+    border-bottom: none;
+}
+
+.code-location .ant-descriptions-item-label {
+    font-weight: 600;
+    color: #262626;
+}
+
+.code-location .ant-typography {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+    background: #f6f8fa;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.ai-diagnosis-actions {
+    display: flex;
+    justify-content: center;
+    padding: 16px 0;
+    border-top: 1px solid #f0f0f0;
+}
+
+.ai-diagnosis-loading {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.diagnosis-process {
+    margin-top: 24px;
+    text-align: left;
+}
+
+.diagnosis-process ul {
+    margin: 16px 0;
+    padding-left: 20px;
+}
+
+.diagnosis-process li {
+    margin: 8px 0;
+    color: #595959;
+}
+
+.no-ai-diagnosis {
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.no-ai-diagnosis ul {
+    text-align: left;
+    display: inline-block;
+    margin: 16px 0;
+}
+
+.no-ai-diagnosis li {
+    margin: 8px 0;
+    color: #595959;
+}
+
+/* 新增的进度指示器和状态显示样式 */
+.diagnosis-progress-card {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #91d5ff;
+    box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+}
+
+.task-status-indicator {
+    padding: 20px 0;
+}
+
+.progress-section {
+    margin-bottom: 24px;
+}
+
+.progress-section .ant-progress {
+    margin-top: 12px;
+}
+
+/* 实时状态信息样式 */
+.real-time-status {
+    background: rgba(24, 144, 255, 0.05);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border-left: 3px solid #1890ff;
+}
+
+.real-time-status .ant-badge-status-text {
+    font-weight: 500;
+    color: #1890ff;
+}
+
+.steps-section {
+    margin-bottom: 24px;
+}
+
+.steps-section .ant-steps-vertical>.ant-steps-item {
+    margin-bottom: 16px;
+}
+
+.steps-section .ant-steps-vertical>.ant-steps-item .ant-steps-item-title {
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* 阶段性结果样式 */
+.partial-results {
+    background: rgba(82, 196, 26, 0.05);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid rgba(82, 196, 26, 0.2);
+}
+
+.partial-result-content {
+    margin-top: 12px;
+}
+
+.partial-result-content .ant-alert {
+    border: none;
+    background: transparent;
+}
+
+.partial-result-content .ant-alert-message {
+    color: #52c41a;
+    font-weight: 600;
+}
+
+.partial-result-content .ant-alert-description {
+    color: #595959;
+}
+
+.partial-result-content ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.partial-result-content li {
+    margin: 4px 0;
+    color: #595959;
+}
+
+.task-info {
+    margin-bottom: 24px;
+}
+
+.task-info .ant-descriptions-item-label {
+    font-weight: 600;
+    color: #262626;
+    width: 80px;
+}
+
+/* 实时更新动画 */
+@keyframes realTimeUpdate {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.8;
+        transform: scale(1.02);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.real-time-status,
+.partial-results,
+.task-info {
+    animation: realTimeUpdate 2s ease-in-out infinite;
+}
+
+/* 进度条动画增强 */
+.progress-section .ant-progress-bg {
+    transition: width 0.5s ease;
+    background: linear-gradient(90deg, #108ee9 0%, #87d068 100%);
+}
+
+.progress-section .ant-progress-text {
+    font-weight: 600;
+    color: #1890ff;
+}
+
+/* 步骤图标动画增强 */
+.steps-section .ant-steps-item-process .ant-steps-item-icon {
+    animation: pulse 2s infinite;
+    background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+}
+
+.steps-section .ant-steps-item-finish .ant-steps-item-icon {
+    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+}
+
+.steps-section .ant-steps-item-wait .ant-steps-item-icon {
+    background: #f0f0f0;
+    border: 2px solid #d9d9d9;
+}
+
+/* 状态徽章增强 */
+.task-info .ant-badge-status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+.task-info .ant-badge-status-text {
+    font-weight: 500;
+    margin-left: 8px;
+}
+
+/* 任务信息卡片增强 */
+.task-info .ant-descriptions {
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.task-info .ant-descriptions-item {
+    padding: 12px 16px;
+}
+
+.task-info .ant-descriptions-item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* 操作反馈样式 */
+.operation-feedback {
+    margin-bottom: 16px;
+    animation: slideInDown 0.5s ease-out;
+}
+
+.operation-feedback .ant-alert {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.operation-feedback .ant-alert-message {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.operation-feedback .ant-alert-description {
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+/* 实时统计信息样式 */
+.real-time-stats {
+    background: rgba(24, 144, 255, 0.05);
+    border-radius: 8px;
+    padding: 12px;
+    border: 1px solid rgba(24, 144, 255, 0.2);
+    margin-top: 12px;
+}
+
+.real-time-stats .ant-statistic-title {
+    font-size: 12px;
+    color: #8c8c8c;
+    margin-bottom: 4px;
+}
+
+.real-time-stats .ant-statistic-content {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.real-time-stats .ant-statistic-content-value {
+    color: #1890ff;
+}
+
+.real-time-stats .ant-statistic-content-prefix {
+    color: #52c41a;
+    animation: spin 1s linear infinite;
+}
+
+/* 实时状态信息增强样式 */
+.real-time-status {
+    background: rgba(24, 144, 255, 0.05);
+    padding: 12px 16px;
+    border-radius: 8px;
+    border-left: 3px solid #1890ff;
+    margin-top: 16px;
+}
+
+.real-time-status .ant-badge-status-text {
+    font-weight: 600;
+    color: #1890ff;
+    font-size: 14px;
+}
+
+.real-time-status .ant-space-vertical {
+    width: 100%;
+}
+
+/* 任务信息增强样式 */
+.task-info .ant-descriptions-item-label {
+    font-weight: 600;
+    color: #262626;
+    width: 100px;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.task-info .ant-descriptions-item-content {
+    font-weight: 500;
+}
+
+.task-info .ant-descriptions-item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+/* 进度条增强样式 */
+.progress-section .ant-progress-bg {
+    transition: width 0.8s ease;
+    background: linear-gradient(90deg, #108ee9 0%, #87d068 100%);
+    box-shadow: 0 2px 4px rgba(24, 144, 255, 0.3);
+}
+
+.progress-section .ant-progress-text {
+    font-weight: 700;
+    color: #1890ff;
+    font-size: 16px;
+}
+
+/* 步骤指示器增强样式 */
+.steps-section .ant-steps-vertical>.ant-steps-item {
+    margin-bottom: 20px;
+    transition: all 0.3s ease;
+}
+
+.steps-section .ant-steps-vertical>.ant-steps-item.ant-steps-item-process {
+    transform: scale(1.05);
+}
+
+.steps-section .ant-steps-vertical>.ant-steps-item .ant-steps-item-title {
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 500;
+}
+
+.steps-section .ant-steps-vertical>.ant-steps-item .ant-steps-item-icon {
+    transition: all 0.3s ease;
+}
+
+/* 动画效果增强 */
+@keyframes slideInDown {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes realTimeUpdate {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 0.9;
+        transform: scale(1.01);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.real-time-status,
+.partial-results,
+.task-info,
+.operation-feedback {
+    animation: realTimeUpdate 3s ease-in-out infinite;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .ai-diagnosis-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .ai-diagnosis-actions .ant-btn {
+        width: 100%;
+    }
+
+    .diagnosis-content,
+    .possible-causes,
+    .fix-suggestions,
+    .prevention-measures,
+    .code-location,
+    .diagnosis-basis {
+        margin: 12px 0;
+        padding: 12px;
+    }
+
+    .task-status-indicator {
+        padding: 16px 0;
+    }
+
+    .progress-section,
+    .steps-section,
+    .task-info {
+        margin-bottom: 20px;
+    }
+
+    .diagnosis-progress-card .ant-card-body {
+        padding: 16px;
+    }
+
+    .real-time-status {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .partial-results {
+        padding: 12px;
+        margin-top: 12px;
+    }
+
+    .partial-result-content .ant-alert-message {
+        font-size: 14px;
+    }
+
+    .partial-result-content .ant-alert-description {
+        font-size: 12px;
+    }
+
+    .task-info .ant-descriptions-item-label {
+        width: 70px;
+        font-size: 12px;
+    }
+
+    .task-info .ant-descriptions-item {
+        padding: 8px 12px;
+    }
+
+    .real-time-stats .ant-col {
+        margin-bottom: 8px;
+    }
+
+    .real-time-stats .ant-statistic-title {
+        font-size: 11px;
+    }
+
+    .real-time-stats .ant-statistic-content {
+        font-size: 12px;
+    }
+
+    .operation-feedback .ant-alert-message {
+        font-size: 13px;
+    }
+
+    .operation-feedback .ant-alert-description {
+        font-size: 12px;
+    }
+
+    .task-info .ant-descriptions-item-label {
+        width: 80px;
+        font-size: 12px;
+    }
+
+    .task-info .ant-descriptions-item {
+        padding: 8px 12px;
+    }
+}

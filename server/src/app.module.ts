@@ -13,6 +13,8 @@ import { AuthModule } from "./modules/auth/auth.module";
 import { SourcemapModule } from "./modules/sourcemap/sourcemap.module";
 import { AlertModule } from "./modules/alert/alert.module";
 import { LoggingModule } from "./modules/logging/logging.module";
+import { AiDiagnosisModule } from "./modules/ai-diagnosis/ai-diagnosis.module";
+import { DeepSeekModule } from "./modules/deepseek/deepseek.module";
 import { MySQLDatabaseConfig } from "./config/database.config";
 import { RedisConfigService } from "./config/redis.config";
 import { ConfigModule } from "./common/config/config.module";
@@ -61,6 +63,8 @@ import { ConfigModule } from "./common/config/config.module";
     SourcemapModule,
     AlertModule,
     LoggingModule,
+    AiDiagnosisModule,
+    DeepSeekModule,
   ],
 })
 export class AppModule {}

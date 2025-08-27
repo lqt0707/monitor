@@ -187,12 +187,12 @@ export class ConfigHelper {
       [ConfigKey.EMAIL_PASSWORD]: this.getString(ConfigKey.EMAIL_PASSWORD, ""),
       [ConfigKey.EMAIL_FROM]: this.getString(ConfigKey.EMAIL_FROM, ""),
 
-      // AI配置
+      // AI配置 (DeepSeek)
       [ConfigKey.AI_API_KEY]: this.getString(ConfigKey.AI_API_KEY, ""),
-      [ConfigKey.AI_MODEL]: this.getString(ConfigKey.AI_MODEL, "gpt-3.5-turbo"),
+      [ConfigKey.AI_MODEL]: this.getString(ConfigKey.AI_MODEL, "deepseek-chat"),
       [ConfigKey.AI_BASE_URL]: this.getString(
         ConfigKey.AI_BASE_URL,
-        "https://api.openai.com"
+        "https://api.deepseek.com"
       ),
 
       // JWT配置
@@ -289,8 +289,11 @@ export class ConfigHelper {
   getAiConfig() {
     return {
       apiKey: this.getString(ConfigKey.AI_API_KEY, ""),
-      model: this.getString(ConfigKey.AI_MODEL, "gpt-3.5-turbo"),
-      baseUrl: this.getString(ConfigKey.AI_BASE_URL, "https://api.openai.com"),
+      model: this.getString(ConfigKey.AI_MODEL, "deepseek-chat"),
+      baseUrl: this.getString(
+        ConfigKey.AI_BASE_URL,
+        "https://api.deepseek.com"
+      ),
     };
   }
 }

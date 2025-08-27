@@ -49,6 +49,7 @@ export interface ErrorAggregation {
   lastOccurrence: string;
   aiDiagnosis?: string;
   aiFixSuggestion?: string;
+  aiDiagnosisHistory?: string;
   isResolved: boolean;
   createdAt: string;
   updatedAt: string;
@@ -134,4 +135,43 @@ export interface LoginForm {
 export interface LoginResponse {
   token: string;
   user: User;
+}
+
+// AI诊断相关类型定义
+export interface AiDiagnosisResult {
+  analysis: string; // 错误分析
+  possibleCauses: string[]; // 可能原因列表
+  fixSuggestions: string[]; // 修复建议列表
+  preventionMeasures: string; // 预防措施
+  severity: "low" | "medium" | "high"; // 严重程度
+  rawResponse: string; // 原始AI响应
+  exactLocation?: {
+    file?: string; // 文件路径
+    line?: number; // 行号
+    column?: number; // 列号
+    function?: string; // 函数名
+  };
+  confidence?: number; // 诊断置信度
+  createdAt?: string; // 诊断时间
+  updatedAt?: string; // 更新时间
+}
+
+export interface DiagnosisTaskStatus {
+  status: "pending" | "processing" | "completed" | "failed";
+  result?: AiDiagnosisResult;
+  error?: string;
+  message?: string;
+  partialResult?: {
+    analysis?: string;
+    possibleCauses?: string[];
+    fixSuggestions?: string[];
+    severity?: "low" | "medium" | "high";
+  };
+}
+
+export interface DiagnosisHistory {
+  id: string;
+  diagnosis: AiDiagnosisResult;
+  createdAt: string;
+  updatedAt: string;
 }

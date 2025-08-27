@@ -64,10 +64,57 @@ services:
     networks:
       - monitor-network
 
+  # 监控系统Server
+  server:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: monitor-server
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - CLICKHOUSE_HOST=clickhouse
+      - CLICKHOUSE_PORT=9000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./server:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    depends_on:
+      - mysql
+      - clickhouse
+      - redis
+    networks:
+      - monitor-network
+
+  # 监控系统Admin（管理后台）
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: monitor-admin
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./admin:/app
+      - /app/node_modules
+    depends_on:
+      - server
+    networks:
+      - monitor-network
+
 volumes:
   mysql_data:
   clickhouse_data:
   redis_data:
+  server_data:
+  admin_data:
 
 networks:
   monitor-network:
