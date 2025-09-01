@@ -2,10 +2,17 @@ name: Auto Publish SDK
 
 on:
   push:
-    branches: [main]
+    branches: [main, master]
     paths:
       - "sdk/**"
       - ".github/workflows/auto-publish.yml"
+  pull_request:
+    branches: [main, master]
+    paths:
+      - "sdk/**"
+      - ".github/workflows/auto-publish.yml"
+  release:
+    types: [published]
   workflow_dispatch:
 
 jobs:
