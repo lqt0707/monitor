@@ -1,0 +1,120 @@
+.source-code-navigator {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.source-code-navigator .ant-card-body {
+    flex: 1;
+    padding: 12px;
+    overflow: hidden;
+}
+
+.file-tree-container {
+    height: 100%;
+    overflow: auto;
+}
+
+.source-code-tree {
+    background: transparent;
+}
+
+.source-code-tree .ant-tree-node-content-wrapper {
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.source-code-tree .ant-tree-node-content-wrapper:hover {
+    background-color: rgba(24, 144, 255, 0.1);
+}
+
+.source-code-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+    background-color: rgba(24, 144, 255, 0.2);
+}
+
+.tree-node {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.tree-node.error-file {
+    color: #cf1322;
+    font-weight: 500;
+}
+
+.error-line-info {
+    font-size: 12px;
+    margin-left: 4px;
+}
+
+.navigator-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+}
+
+.error-file-not-found {
+    padding: 16px;
+    text-align: center;
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    margin-top: 16px;
+}
+
+.error-file-not-found .ant-typography {
+    display: block;
+    margin-bottom: 8px;
+}
+
+.error-file-tip {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+/* 错误文件高亮样式 */
+.source-code-tree .ant-tree-treenode[data-key] .ant-tree-node-content-wrapper.error-file {
+    background-color: rgba(255, 77, 79, 0.1);
+    border-left: 3px solid #ff4d4f;
+}
+
+/* 自定义滚动条 */
+.file-tree-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.file-tree-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.file-tree-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.file-tree-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .source-code-navigator .ant-card-head {
+        padding: 0 12px;
+    }
+
+    .source-code-navigator .ant-card-body {
+        padding: 8px;
+    }
+
+    .tree-node {
+        gap: 4px;
+    }
+
+    .error-line-info {
+        font-size: 11px;
+    }
+}

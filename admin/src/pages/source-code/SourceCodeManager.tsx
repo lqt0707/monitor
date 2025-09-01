@@ -63,6 +63,9 @@ interface VersionInfo {
   uploadedAt: string;
   fileCount: number;
   isActive: boolean;
+  hasSourcemap?: boolean;
+  sourcemapVersion?: string;
+  sourcemapAssociatedAt?: string;
 }
 
 const SourceCodeManager: React.FC = () => {
@@ -126,16 +129,21 @@ const SourceCodeManager: React.FC = () => {
       setVersionLoading(true);
       const response = await fetchSourceCodeVersions(pid);
       if (response.success) {
-        setVersions(response.data || []);
+        // 处理字段映射：API返回createdAt，前端使用uploadedAt
+        const versionsWithMappedFields = response.data.map((version: any) => ({
+          ...version,
+          uploadedAt: version.createdAt || version.uploadedAt
+        }));
+        setVersions(versionsWithMappedFields || []);
 
         // 如果有活跃版本，自动选择
-        const activeVersion = response.data.find((v) => v.isActive);
+        const activeVersion = versionsWithMappedFields.find((v: VersionInfo) => v.isActive);
         if (activeVersion) {
           setSelectedVersion(activeVersion.version);
           loadFileTree(pid, activeVersion.version);
-        } else if (response.data.length > 0) {
-          setSelectedVersion(response.data[0].version);
-          loadFileTree(pid, response.data[0].version);
+        } else if (versionsWithMappedFields.length > 0) {
+          setSelectedVersion(versionsWithMappedFields[0].version);
+          loadFileTree(pid, versionsWithMappedFields[0].version);
         }
       } else {
         message.error(response.message || "加载版本列表失败");
@@ -349,6 +357,61 @@ const SourceCodeManager: React.FC = () => {
       setSelectedFile(node.path || null);
       loadFileContent(node.path || "");
     }
+  };
+
+  // 高亮错误文件或版本（从路由状态获取）
+  useEffect(() => {
+    const location = window.location;
+    if (location.pathname === "/source-code") {
+      const state = (location as any).state;
+      if (state?.highlightFile) {
+        // 延迟执行，确保文件树已加载
+        setTimeout(() => {
+          highlightErrorFile(state.highlightFile);
+        }, 500);
+      } else if (state?.highlightVersion) {
+        // 高亮显示指定版本
+        const targetVersion = state.highlightVersion;
+        const versionExists = versions.some((v: VersionInfo) => v.version === targetVersion);
+        
+        if (versionExists) {
+          setSelectedVersion(targetVersion);
+          loadFileTree(projectId, targetVersion);
+          message.success(`已切换到版本 ${targetVersion}`);
+        } else {
+          message.warning(`版本 ${targetVersion} 不存在`);
+        }
+      }
+    }
+  }, [treeData, versions, projectId]);
+
+  // 高亮错误文件
+  const highlightErrorFile = (errorFilePath: string) => {
+    if (!errorFilePath || treeData.length === 0) return;
+
+    // 展开到错误文件路径
+    const pathParts = errorFilePath.split("/");
+    const expandKeys: string[] = [];
+
+    for (let i = 1; i < pathParts.length; i++) {
+      expandKeys.push(pathParts.slice(0, i).join("/"));
+    }
+
+    setExpandedKeys(expandKeys);
+    // 文件树选中逻辑已通过其他方式处理
+
+    // 滚动到错误文件
+    setTimeout(() => {
+      const errorFileElement = document.querySelector(
+        `[data-key="${errorFilePath}"]`
+      );
+      if (errorFileElement) {
+        errorFileElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
+    }, 100);
   };
 
   // 处理文件树展开/收起
@@ -613,6 +676,12 @@ const SourceCodeManager: React.FC = () => {
                           <Text type="secondary">
                             文件数量: {version.fileCount}
                           </Text>
+                          {version.hasSourcemap && (
+                            <Text type="success">
+                              ✅ 已关联Sourcemap
+                              {version.sourcemapVersion && ` (${version.sourcemapVersion})`}
+                            </Text>
+                          )}
                         </div>
                       </div>
                       <div className="version-actions">

@@ -26,6 +26,10 @@ export interface PackOptions {
   includePatterns?: string[];
   /** 额外的文件排除模式 */
   excludePatterns?: string[];
+  /** 项目ID，默认为项目目录名 */
+  projectId?: string;
+  /** 版本号，默认为当前日期 */
+  version?: string;
 }
 
 export interface PackResult {
@@ -70,8 +74,11 @@ export class SourcePacker {
    * 合并默认选项
    */
   private mergeDefaultOptions(options: PackOptions): Required<PackOptions> {
+    const projectRoot = options.projectRoot || process.cwd();
+    const projectName = path.basename(projectRoot);
+    
     return {
-      projectRoot: options.projectRoot || process.cwd(),
+      projectRoot: projectRoot,
       outputDir: options.outputDir || "source-code-package",
       createZip: options.createZip !== false,
       zipName: options.zipName || "",
@@ -80,6 +87,8 @@ export class SourcePacker {
       mode: options.mode || "basic",
       includePatterns: options.includePatterns || [],
       excludePatterns: options.excludePatterns || [],
+      projectId: options.projectId || projectName,
+      version: options.version || new Date().toISOString().slice(0, 10).replace(/-/g, ''),
     };
   }
 
@@ -142,60 +151,26 @@ export class SourcePacker {
    * 获取打包脚本路径
    */
   private getPackerScriptPath(): string {
-    // 从当前SDK目录向上查找examples目录
-    let currentDir = __dirname;
-    let examplesDir: string;
+    // 使用固定的相对路径定位打包脚本
+    // 打包脚本现在位于sdk项目的scripts目录下
+    const scriptsDir = path.resolve(__dirname, "../../scripts");
+    const scriptName = "pack-source-code.mjs";
     
-    // 向上查找直到找到examples目录
-    while (currentDir !== path.dirname(currentDir)) {
-      const possibleExamplesDir = path.join(currentDir, "examples");
-      if (fs.existsSync(possibleExamplesDir)) {
-        examplesDir = possibleExamplesDir;
-        break;
-      }
-      currentDir = path.dirname(currentDir);
-    }
-    
-    if (!examplesDir!) {
-      // 如果找不到examples目录，尝试相对路径
-      examplesDir = path.resolve(__dirname, "../../../examples");
-    }
-
-    // 根据项目类型选择对应的打包脚本
-    const projectType = this.detectProjectType();
-    let scriptDir: string;
-
-    if (projectType === "taro") {
-      scriptDir = path.join(examplesDir, "taro-mini");
-    } else {
-      // 默认使用 taro-mini 的脚本，因为它更通用
-      scriptDir = path.join(examplesDir, "taro-mini");
-    }
-
-    const scriptName =
-      this.options.mode === "advanced"
-        ? "pack-source-advanced.js"
-        : "pack-source-code.js";
-
-    return path.join(scriptDir, scriptName);
+    return path.join(scriptsDir, scriptName);
   }
 
   /**
    * 创建临时配置文件
    */
   private createTempConfig(): string | null {
-    if (
-      this.options.includePatterns.length === 0 &&
-      this.options.excludePatterns.length === 0
-    ) {
-      return null;
-    }
-
     const tempConfigPath = path.join(
       this.options.projectRoot,
       ".temp-pack-config.json"
     );
+    
     const config = {
+      projectId: this.options.projectId,
+      version: this.options.version,
       includePatterns: [
         "src/**/*",
         "config/**/*",
@@ -204,7 +179,7 @@ export class SourcePacker {
         "*.js",
         "*.ts",
         "*.md",
-        ...this.options.includePatterns,
+        ...(this.options.includePatterns || []),
       ],
       excludePatterns: [
         "node_modules/**/*",
@@ -215,7 +190,7 @@ export class SourcePacker {
         ".DS_Store",
         "package-lock.json",
         "source-code-package/**/*",
-        ...this.options.excludePatterns,
+        ...(this.options.excludePatterns || []),
       ],
     };
 
@@ -266,6 +241,9 @@ export class SourcePacker {
         args.push(`--config=${tempConfigPath}`);
       }
 
+      // 传递项目根目录作为工作目录
+      args.push(`--cwd=${this.options.projectRoot}`);
+
       if (this.options.verbose) {
         args.push("--verbose=true");
       }
@@ -274,11 +252,47 @@ export class SourcePacker {
       const command = `node "${scriptPath}" ${args.join(" ")}`;
       this.log("执行命令:", command);
 
-      const output = execSync(command, {
-        cwd: this.options.projectRoot,
-        encoding: "utf8",
-        stdio: this.options.verbose ? "inherit" : "pipe",
-      });
+      // 在verbose模式下，我们需要同时捕获输出和显示到控制台
+      let output = "";
+      if (this.options.verbose) {
+        // verbose模式下，使用spawn来同时捕获输出和显示
+        const { spawn } = require('child_process');
+        const child = spawn('node', [scriptPath, ...args], {
+          cwd: this.options.projectRoot,
+          encoding: 'utf8',
+        });
+        
+        // 收集输出
+        child.stdout.on('data', (data: Buffer) => {
+          process.stdout.write(data);
+          output += data.toString();
+        });
+        
+        child.stderr.on('data', (data: Buffer) => {
+          process.stderr.write(data);
+          output += data.toString();
+        });
+        
+        // 等待进程结束
+        await new Promise((resolve, reject) => {
+          child.on('close', (code: number) => {
+            if (code === 0) {
+              resolve(output);
+            } else {
+              reject(new Error(`打包脚本执行失败，退出码: ${code}`));
+            }
+          });
+          
+          child.on('error', reject);
+        });
+      } else {
+        // 非verbose模式下使用execSync
+        output = execSync(command, {
+          cwd: this.options.projectRoot,
+          encoding: "utf8",
+          stdio: "pipe",
+        });
+      }
 
       // 解析输出结果
       const result = this.parsePackResult(output);
@@ -330,7 +344,7 @@ export class SourcePacker {
 
     // 安全的正则匹配来提取信息
     if (output && typeof output === 'string') {
-      const fileCountMatch = output.match(/找到\s+(\d+)\s+个源代码文件/);
+      const fileCountMatch = output.match(/处理文件数:\s+(\d+)/);
       if (fileCountMatch) {
         totalFiles = parseInt(fileCountMatch[1]);
       }
@@ -340,7 +354,7 @@ export class SourcePacker {
         totalSize = Math.round(parseFloat(sizeMatch[1]) * 1024);
       }
 
-      const zipMatch = output.match(/压缩包创建成功:\s+(.+\.zip)/);
+      const zipMatch = output.match(/created\s+(.+\.zip)/);
       if (zipMatch) {
         const zipFileName = zipMatch[1].trim();
         // 如果是绝对路径就直接使用，否则相对于项目根目录
@@ -382,48 +396,106 @@ export async function packSourceCode(
 }
 
 /**
- * 获取推荐的打包配置
- * @param projectType 项目类型
- * @returns 推荐配置
- */
-export function getRecommendedConfig(
-  projectType?: "web" | "taro"
-): PackOptions {
-  const baseConfig: PackOptions = {
-    createZip: true,
-    verbose: false,
-    mode: "basic",
-  };
+   * 获取推荐的打包配置
+   * @param projectType 项目类型
+   * @returns 推荐配置
+   */
+  export function getRecommendedConfig(
+    projectType?: "web" | "taro"
+  ): PackOptions {
+    const baseConfig: PackOptions = {
+      createZip: true,
+      verbose: false,
+      mode: "basic",
+    };
 
-  if (projectType === "taro") {
+    if (projectType === "taro") {
+      return {
+        ...baseConfig,
+        includePatterns: [
+          "src/**/*",
+          "config/**/*",
+          "types/**/*",
+          "project.config.json",
+          "project.private.config.json",
+        ],
+        excludePatterns: ["dist/**/*", "node_modules/**/*", ".temp/**/*"],
+        sourceIncludePatterns: [
+          "src/**/*",
+          "config/**/*",
+          "types/**/*",
+          "project.config.json",
+          "project.private.config.json",
+        ],
+        sourceExcludePatterns: ["dist/**/*", "node_modules/**/*", ".temp/**/*"],
+        sourcemapIncludePatterns: [
+          "dist/**/*.map"
+        ],
+        sourcemapExcludePatterns: [
+          "dist/**/*.js",
+          "dist/**/*.css",
+          "dist/**/*.html"
+        ]
+      };
+    }
+
+    if (projectType === "web") {
+      return {
+        ...baseConfig,
+        includePatterns: ["src/**/*", "public/**/*", "config/**/*", "types/**/*"],
+        excludePatterns: [
+          "build/**/*",
+          "dist/**/*",
+          "node_modules/**/*",
+          "coverage/**/*",
+        ],
+        sourceIncludePatterns: ["src/**/*", "public/**/*", "config/**/*", "types/**/*"],
+        sourceExcludePatterns: [
+          "build/**/*",
+          "dist/**/*",
+          "node_modules/**/*",
+          "coverage/**/*",
+        ],
+        sourcemapIncludePatterns: [
+          "dist/**/*.map"
+        ],
+        sourcemapExcludePatterns: [
+          "dist/**/*.js",
+          "dist/**/*.css",
+          "dist/**/*.html"
+        ]
+      };
+    }
+
     return {
       ...baseConfig,
-      includePatterns: [
-        "src/**/*",
-        "config/**/*",
-        "types/**/*",
-        "project.config.json",
-        "project.private.config.json",
+      sourceIncludePatterns: [
+        'src/**/*',
+        'config/**/*',
+        'types/**/*',
+        '*.json',
+        '*.js',
+        '*.ts',
+        '*.md'
       ],
-      excludePatterns: ["dist/**/*", "node_modules/**/*", ".temp/**/*"],
+      sourceExcludePatterns: [
+        'node_modules/**',
+        '.git/**',
+        'dist/**',
+        'build/**',
+        '*.log',
+        '.DS_Store'
+      ],
+      sourcemapIncludePatterns: [
+        'dist/**/*.map'
+      ],
+      sourcemapExcludePatterns: [
+        'dist/**/*.js',
+        'dist/**/*.css',
+        'dist/**/*.html'
+      ]
     };
   }
-
-  if (projectType === "web") {
-    return {
-      ...baseConfig,
-      includePatterns: ["src/**/*", "public/**/*", "config/**/*", "types/**/*"],
-      excludePatterns: [
-        "build/**/*",
-        "dist/**/*",
-        "node_modules/**/*",
-        "coverage/**/*",
-      ],
-    };
-  }
-
-  return baseConfig;
-}
 
 // 默认导出
 export default {

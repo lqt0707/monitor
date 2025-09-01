@@ -6,6 +6,7 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  Logger,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -23,6 +24,8 @@ import { AiDiagnosisService } from "../../../services/ai-diagnosis.service";
 @ApiTags("AI诊断")
 @Controller("ai-diagnosis")
 export class AiDiagnosisController {
+  private readonly logger = new Logger(AiDiagnosisController.name);
+
   constructor(private readonly aiDiagnosisService: AiDiagnosisService) {}
 
   /**
@@ -189,6 +192,104 @@ export class AiDiagnosisController {
         error.message || "获取综合分析报告失败",
         HttpStatus.INTERNAL_SERVER_ERROR
       );
+    }
+  }
+
+  /**
+   * 执行RAG增强错误分析
+   * @param body RAG分析请求数据
+   * @returns RAG分析结果
+   */
+  @Post("rag-analysis")
+  @ApiOperation({ summary: "执行RAG增强错误分析" })
+  @ApiBody({
+    description: "RAG分析请求数据",
+    schema: {
+      type: "object",
+      properties: {
+        errorId: { type: "string", description: "错误ID" },
+        errorContext: {
+          type: "object",
+          properties: {
+            errorMessage: { type: "string", description: "错误消息" },
+            stackTrace: { type: "string", description: "错误堆栈" },
+            projectPath: { type: "string", description: "项目路径" },
+            framework: { type: "string", description: "前端框架" },
+            sourceMapDir: { type: "string", description: "SourceMap目录" },
+          },
+        },
+      },
+    },
+  })
+  @ApiResponse({ status: 200, description: "RAG分析完成" })
+  @ApiResponse({ status: 400, description: "请求参数错误" })
+  @ApiResponse({ status: 500, description: "服务器内部错误" })
+  async performRAGAnalysis(@Body() ragRequest: any) {
+    try {
+      const result = await this.aiDiagnosisService.performRAGErrorAnalysis(
+        ragRequest.errorId,
+        ragRequest.errorContext
+      );
+      return result;
+    } catch (error) {
+      throw new HttpException(
+        error.message || "RAG分析失败",
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    }
+  }
+
+  /**
+   * 获取RAG分析历史
+   * @returns RAG分析历史列表
+   */
+  @Get("rag-analysis/history")
+  @ApiOperation({ summary: "获取RAG分析历史" })
+  @ApiResponse({ status: 200, description: "获取RAG分析历史成功" })
+  @ApiResponse({ status: 500, description: "服务器内部错误" })
+  async getRAGAnalysisHistory() {
+    try {
+      const history = await this.aiDiagnosisService.getRAGAnalysisHistory();
+      // 即使没有历史记录也返回空数组，不抛出错误
+      return history || [];
+    } catch (error) {
+      this.logger.error("获取RAG分析历史失败:", error);
+      // 返回空数组而不是抛出错误
+      return [];
+    }
+  }
+
+  /**
+   * 获取RAG分析结果
+   * @param analysisId 分析ID
+   * @returns RAG分析结果
+   */
+  @Get("rag-analysis/:analysisId")
+  @ApiOperation({ summary: "获取RAG分析结果" })
+  @ApiParam({ name: "analysisId", description: "分析ID", type: "string" })
+  @ApiResponse({ status: 200, description: "获取RAG分析结果成功" })
+  @ApiResponse({ status: 404, description: "RAG分析结果不存在" })
+  @ApiResponse({ status: 500, description: "服务器内部错误" })
+  async getRAGAnalysisResult(@Param("analysisId") analysisId: string) {
+    try {
+      const result =
+        await this.aiDiagnosisService.getRAGAnalysisResult(analysisId);
+      if (!result) {
+        // 返回404状态码，但不抛出异常
+        return {
+          statusCode: 404,
+          message: "RAG分析结果不存在",
+          data: null,
+        };
+      }
+      return result;
+    } catch (error) {
+      this.logger.error(`获取RAG分析结果失败: ${analysisId}`, error);
+      return {
+        statusCode: 500,
+        message: "获取RAG分析结果失败",
+        data: null,
+      };
     }
   }
 }

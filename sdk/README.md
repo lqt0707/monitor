@@ -5,12 +5,11 @@
 ## 安装
 
 ```bash
-# 安装核心包
+# 安装核心包（包含所有平台功能）
 npm install @monitor/sdk
 
-# 或者安装特定平台包
-npm install @monitor/web-sdk  # Web平台
-npm install @monitor/taro-sdk # Taro小程序平台
+# 或者从本地安装（开发阶段）
+npm install /path/to/monitor/sdk
 ```
 
 ## 基本使用
@@ -27,7 +26,7 @@ Monitor.init({
 });
 
 // Taro小程序项目
-import Monitor from "@monitor/taro-sdk";
+import Monitor from "@monitor/sdk";
 
 // 初始化
 Monitor.init({
@@ -47,6 +46,15 @@ Monitor.init({
 
 ```bash
 npx @monitor/sdk pack-source [选项]
+```
+
+**注意**: 如果 `@monitor/sdk` 尚未发布到npm，可以使用本地路径运行：
+```bash
+# 使用相对路径（推荐）
+node ./bin/pack-source.cjs [选项]
+
+# 或者使用绝对路径
+node /path/to/monitor/sdk/bin/pack-source.cjs [选项]
 ```
 
 选项：

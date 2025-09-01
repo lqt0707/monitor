@@ -130,6 +130,15 @@
     gap: 2px;
 }
 
+.version-details .ant-typography-success {
+    font-size: 12px;
+    margin-top: 4px;
+    padding: 2px 6px;
+    background-color: #f6ffed;
+    border-radius: 4px;
+    border: 1px solid #b7eb8f;
+}
+
 .version-actions {
     display: flex;
     align-items: center;

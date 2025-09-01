@@ -7,6 +7,8 @@ import { configureStore } from '@reduxjs/toolkit';
 import authSlice from './slices/authSlice';
 import errorSlice from './slices/errorSlice';
 import projectSlice from './slices/projectSlice';
+import sourceCodeSourcemapSlice from './slices/sourceCodeSourcemapSlice';
+import errorSourceCodeSlice from './slices/errorSourceCodeSlice';
 
 /**
  * 配置 Redux Store
@@ -16,6 +18,8 @@ export const store = configureStore({
     auth: authSlice,
     error: errorSlice,
     project: projectSlice,
+    sourceCodeSourcemap: sourceCodeSourcemapSlice,
+    errorSourceCode: errorSourceCodeSlice,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

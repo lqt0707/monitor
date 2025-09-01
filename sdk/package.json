@@ -24,7 +24,10 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "monitor-pack": "./bin/pack-source.cjs"
+    "monitor-pack": "./bin/pack-source.cjs",
+    "monitor-build": "./scripts/enhanced-build.mjs",
+    "auto-config-taro": "./scripts/auto-config-taro.cjs",
+    "auto-detect-taro": "./scripts/auto-detect-taro.mjs"
   },
   "files": [
     "dist",
@@ -34,6 +37,7 @@
     "adapters",
     "source-packer",
     "bin",
+    "scripts",
     "README.md"
   ],
   "exports": {
@@ -104,6 +108,13 @@
     "version:taro": "cd taro-core && npm version",
     "help": "node -e \"console.log('\\n📚 查看快速开始指南：\\n  cat ./QUICK_START.md\\n\\n📦 推荐包选择：\\n  Web项目：npm install @monitor/web-sdk\\n  Taro项目：npm install @monitor/taro-sdk\\n')\""
   },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "globby": "^13.2.2",
+    "inquirer": "^8.2.7"
+  },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^25.0.7",
     "@rollup/plugin-json": "^6.1.0",
@@ -112,12 +123,12 @@
     "@rollup/plugin-terser": "^0.4.4",
     "@rollup/plugin-typescript": "^11.1.6",
     "@types/node": "^20.11.17",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
     "bundlesize": "^0.18.1",
     "chokidar": "^3.6.0",
     "cross-env": "^7.0.3",
     "eslint": "^8.56.0",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
     "lodash-es": "^4.17.21",
     "prettier": "^3.2.5",
     "rimraf": "^5.0.5",

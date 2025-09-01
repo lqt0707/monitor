@@ -24,6 +24,7 @@ import { ClickHouseModule } from "../clickhouse/clickhouse.module";
 import { QUEUE_NAMES, QUEUE_OPTIONS } from "../../config/queue.config";
 import { QueueService } from "./services/queue.service";
 import { MonitorProcessingProcessor } from "./processors/monitor-processing.processor";
+import { SourceCodeSourcemapIntegrationModule } from "./source-code-sourcemap-integration.module";
 
 /**
  * 监控模块
@@ -44,6 +45,7 @@ import { MonitorProcessingProcessor } from "./processors/monitor-processing.proc
     }),
     ServicesModule,
     ClickHouseModule,
+    SourceCodeSourcemapIntegrationModule,
   ],
   controllers: [
     MonitorController,

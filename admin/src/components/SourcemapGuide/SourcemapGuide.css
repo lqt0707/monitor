@@ -1,0 +1,224 @@
+.sourcemap-guide {
+    margin-bottom: 16px;
+}
+
+.guide-content {
+    padding: 8px 0;
+}
+
+.step-content-wrapper {
+    min-height: 300px;
+    padding: 16px 0;
+}
+
+.step-content {
+    padding: 16px;
+    background: #fafafa;
+    border-radius: 8px;
+    border-left: 4px solid #1890ff;
+}
+
+.config-selector {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #f0f0f0;
+}
+
+.generated-config {
+    margin-top: 16px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.config-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: #f6f6f6;
+    border-bottom: 1px solid #d9d9d9;
+}
+
+.config-content {
+    margin: 0;
+    padding: 16px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.config-content code {
+    background: transparent;
+    color: inherit;
+    padding: 0;
+    border: none;
+}
+
+.build-script-section {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 16px 0;
+    padding: 12px;
+    background: #fff;
+    border-radius: 6px;
+    border: 1px solid #f0f0f0;
+}
+
+.upload-checklist {
+    margin: 16px 0;
+    padding: 16px;
+    background: #f6ffed;
+    border-radius: 6px;
+    border-left: 4px solid #52c41a;
+}
+
+.upload-checklist ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+}
+
+.upload-checklist li {
+    margin-bottom: 4px;
+    line-height: 1.6;
+}
+
+.upload-tips {
+    margin: 16px 0;
+    padding: 16px;
+    background: #e6f7ff;
+    border-radius: 6px;
+    border-left: 4px solid #1890ff;
+}
+
+.upload-tips ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+}
+
+.upload-tips li {
+    margin-bottom: 4px;
+    line-height: 1.6;
+}
+
+.quick-navigation {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 0;
+}
+
+.faq-content {
+    padding: 8px 0;
+}
+
+.faq-item {
+    margin-bottom: 24px;
+    padding: 16px;
+    background: #fafafa;
+    border-radius: 6px;
+    border-left: 3px solid #1890ff;
+}
+
+.faq-item:last-child {
+    margin-bottom: 0;
+}
+
+.faq-item .ant-typography {
+    margin: 8px 0 0 0;
+}
+
+.faq-item ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+}
+
+.faq-item li {
+    margin-bottom: 4px;
+    line-height: 1.6;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .step-content {
+        padding: 12px;
+    }
+
+    .config-selector {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .config-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .config-content {
+        font-size: 12px;
+        padding: 12px;
+    }
+
+    .quick-navigation {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .faq-item {
+        padding: 12px;
+    }
+}
+
+/* 动画效果 */
+.step-content {
+    transition: all 0.3s ease;
+}
+
+.generated-config {
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 滚动条样式 */
+.config-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.config-content::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+}
+
+.config-content::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+.config-content::-webkit-scrollbar-thumb:hover {
+    background: #777;
+}

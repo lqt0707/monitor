@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 const { execSync } = require('child_process');
-const { existsSync, mkdirSync, readFileSync, writeFileSync } = require('fs');
+const { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } = require('fs');
 const { join } = require('path');
 const { performance } = require('perf_hooks');
 const crypto = require('crypto');
@@ -67,6 +67,22 @@ async function buildTarget(target, description) {
         }
     }
 
+    // 特别检查taro模块的dist目录
+    if (target === 'taro') {
+        const taroDistDir = join(__dirname, '../taro-core/dist');
+        if (!existsSync(taroDistDir)) {
+            mkdirSync(taroDistDir, { recursive: true });
+            log(`📁 创建taro-core/dist目录`, colors.yellow);
+        }
+        
+        const distFiles = readdirSync(taroDistDir);
+        if (distFiles.length === 0) {
+            log(`ℹ️  taro-core/dist目录为空，构建将创建输出文件`, colors.blue);
+        } else {
+            log(`✅ taro-core/dist目录包含 ${distFiles.length} 个文件`, colors.green);
+        }
+    }
+
     // 检查缓存
     if (process.env.USE_CACHE && checkCache(target)) {
         log(`\n📦 使用缓存 ${description}...`, colors.cyan);
@@ -85,7 +101,7 @@ async function buildTarget(target, description) {
         if (process.env.ANALYZE) env.push(`ANALYZE=${process.env.ANALYZE}`);
 
         const envString = env.length > 0 ? `${env.join(' ')} ` : '';
-        execCommand(`${envString}rollup -c build.config.cjs --environment TARGET=${target}`);
+        execCommand(`${envString}npx rollup -c build.config.cjs --environment TARGET=${target}`);
 
         // 更新缓存
         if (process.env.USE_CACHE) {

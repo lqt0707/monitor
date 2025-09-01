@@ -29,7 +29,7 @@ export class DeepSeekService {
     const apiKey = this.configService.get<string>("DEEPSEEK_API_KEY");
     const model = this.configService.get<string>(
       "DEEPSEEK_MODEL",
-      "deepseek-chat"
+      "deepseek-chat-v3.1"
     );
     const maxTokens = this.configService.get<number>(
       "DEEPSEEK_MAX_TOKENS",

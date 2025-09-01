@@ -106,7 +106,7 @@ export class DatabaseLoggerService {
 
       let query: SelectQueryBuilder<Log> = this.logRepository
         .createQueryBuilder("log")
-        .orderBy("log.timestamp", "DESC");
+        .orderBy("log.createdAt", "DESC");
 
       // 添加过滤条件
       if (level) {
@@ -120,11 +120,11 @@ export class DatabaseLoggerService {
       }
 
       if (startDate) {
-        query = query.andWhere("log.timestamp >= :startDate", { startDate });
+        query = query.andWhere("log.createdAt >= :startDate", { startDate });
       }
 
       if (endDate) {
-        query = query.andWhere("log.timestamp <= :endDate", { endDate });
+        query = query.andWhere("log.createdAt <= :endDate", { endDate });
       }
 
       if (projectId) {
@@ -162,7 +162,7 @@ export class DatabaseLoggerService {
       const result = await this.logRepository
         .createQueryBuilder()
         .delete()
-        .where("timestamp < :cutoffDate", { cutoffDate })
+        .where("createdAt < :cutoffDate", { cutoffDate })
         .execute();
 
       this.logger.log(`清理了 ${result.affected} 条过期日志`);

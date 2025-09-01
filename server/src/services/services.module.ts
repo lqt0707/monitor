@@ -2,7 +2,6 @@ import { Module } from "@nestjs/common";
 import { ConfigModule } from "@nestjs/config";
 import { BullModule } from "@nestjs/bull";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { AiDiagnosisService } from "./ai-diagnosis.service";
 import { EmailService } from "../modules/email/services/email.service";
 import { ErrorHashService } from "../modules/monitor/services/error-hash.service";
 import { QueueService } from "../modules/monitor/services/queue.service";
@@ -11,6 +10,7 @@ import { ClickHouseService } from "../modules/clickhouse/services/clickhouse.ser
 import { ClickHouseConfig } from "../config/database.config";
 import { DeepSeekModule } from "../modules/deepseek/deepseek.module";
 import { DeepSeekService } from "../modules/deepseek/deepseek.service";
+import { SourceCodeModule } from "../modules/source-code/source-code.module";
 import { QUEUE_NAMES } from "../config/queue.config";
 import { ErrorLog } from "../modules/monitor/entities/error-log.entity";
 import { ErrorAggregation } from "../modules/monitor/entities/error-aggregation.entity";
@@ -32,9 +32,9 @@ import { ErrorAggregation } from "../modules/monitor/entities/error-aggregation.
       { name: QUEUE_NAMES.MONITOR_PROCESSING }
     ),
     DeepSeekModule,
+    SourceCodeModule,
   ],
   providers: [
-    AiDiagnosisService,
     EmailService,
     ErrorHashService,
     QueueService,
@@ -44,7 +44,6 @@ import { ErrorAggregation } from "../modules/monitor/entities/error-aggregation.
     DeepSeekService,
   ],
   exports: [
-    AiDiagnosisService,
     EmailService,
     ErrorHashService,
     QueueService,

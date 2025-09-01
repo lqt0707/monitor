@@ -1,0 +1,180 @@
+.enhanced-source-code-viewer {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.enhanced-source-code-viewer.expanded {
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+    height: calc(100vh - 40px);
+}
+
+.viewer-header {
+    border-bottom: 1px solid #f0f0f0;
+    border-radius: 0;
+    margin-bottom: 0;
+}
+
+.viewer-header .ant-card-body {
+    padding: 12px 16px;
+}
+
+.file-info {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #fafafa;
+    border-radius: 4px;
+    border-left: 3px solid #1890ff;
+}
+
+.error-location-info {
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #fff2f0;
+    border-radius: 4px;
+    border-left: 3px solid #ff4d4f;
+}
+
+.viewer-content {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.content-layout {
+    display: flex;
+    height: 100%;
+    gap: 16px;
+}
+
+.navigator-panel {
+    width: 300px;
+    min-width: 300px;
+    border-right: 1px solid #f0f0f0;
+    overflow: hidden;
+}
+
+.code-display-area {
+    flex: 1;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.code-display-area .source-code-viewer {
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+}
+
+.version-info {
+    padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+    background: #fafafa;
+}
+
+.error-file-alert {
+    padding: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.error-file-alert .ant-alert {
+    border-radius: 6px;
+}
+
+.error-file-alert ul {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.error-file-alert li {
+    margin-bottom: 4px;
+    line-height: 1.5;
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+    .navigator-panel {
+        width: 280px;
+        min-width: 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-layout {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .navigator-panel {
+        width: 100%;
+        min-width: auto;
+        border-right: none;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    .viewer-header .ant-card-body {
+        padding: 8px 12px;
+    }
+
+    .file-info,
+    .error-location-info {
+        padding: 6px 8px;
+        font-size: 12px;
+    }
+
+    .version-info {
+        padding: 8px 12px;
+    }
+}
+
+/* 全屏模式下的特殊样式 */
+.enhanced-source-code-viewer.expanded .viewer-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #fff;
+}
+
+.enhanced-source-code-viewer.expanded .content-layout {
+    height: calc(100% - 120px);
+}
+
+/* 动画效果 */
+.content-layout {
+    transition: all 0.3s ease;
+}
+
+.navigator-panel {
+    transition: width 0.3s ease, min-width 0.3s ease;
+}
+
+/* 滚动条样式 */
+.viewer-content::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.viewer-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.viewer-content::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.viewer-content::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

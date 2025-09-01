@@ -10,6 +10,9 @@ import { AlertRule } from "../modules/alert/entities/alert-rule.entity";
 import { AlertHistory } from "../modules/alert/entities/alert-history.entity";
 import { SourceCodeVersion } from "../modules/monitor/entities/source-code-version.entity";
 import { SourceCodeFile } from "../modules/monitor/entities/source-code-file.entity";
+import { Log } from "../modules/logging/entities/log.entity";
+import { SourceCodeChunk } from "../modules/source-code/entities/source-code-chunk.entity";
+import { ProjectIndex } from "../modules/source-code/entities/project-index.entity";
 
 const configService = new ConfigService();
 
@@ -32,6 +35,9 @@ export const AppDataSource = new DataSource({
     AlertHistory,
     SourceCodeVersion,
     SourceCodeFile,
+    Log,
+    SourceCodeChunk,
+    ProjectIndex,
   ],
   synchronize: configService.get<boolean>("MYSQL_SYNCHRONIZE", true),
   logging: configService.get<boolean>("MYSQL_LOGGING", false),

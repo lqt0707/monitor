@@ -38,6 +38,15 @@ import type {
 
 import type { AiDiagnosisResult, DiagnosisTaskStatus } from "../types/monitor";
 
+import type {
+  UploadSourceCodeAndSourcemapResponse,
+  SourceCodeSourcemapAssociation,
+  LocateSourceCodeRequest,
+  SourceCodeLocationResult,
+  PrepareAIContextRequest,
+  AIContextResult,
+} from "../types/sourceCodeSourcemapIntegration";
+
 // API 基础配置
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
@@ -516,6 +525,152 @@ class ApiClient {
   };
 
   /**
+   * 源代码与Sourcemap集成相关接口
+   */
+  sourceCodeSourcemapIntegration = {
+    /**
+     * 上传源代码和sourcemap压缩包
+     * @param data 上传数据
+     * @returns 上传结果
+     */
+    uploadSourceCodeAndSourcemap: async (
+      data: FormData
+    ): Promise<UploadSourceCodeAndSourcemapResponse> => {
+      const response = await this.instance.post<
+        ApiResponse<UploadSourceCodeAndSourcemapResponse>
+      >("/api/source-code-sourcemap-integration/upload", data, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data.data;
+    },
+
+    /**
+     * 获取源代码与sourcemap关联信息
+     * @param projectId 项目ID
+     * @returns 关联信息对象
+     */
+    getAssociation: async (
+      projectId: string
+    ): Promise<{
+      success: boolean;
+      sourceCodeVersion:
+        | {
+            id: number;
+            projectId: string;
+            version: string;
+            sourcemapVersion?: string;
+            isActive: boolean;
+            createdAt: string;
+            updatedAt: string;
+          }
+        | undefined;
+      sourcemapFiles: any[];
+      message?: string;
+    }> => {
+      const response = await this.instance.get(
+        `/api/source-code-sourcemap-integration/association/${projectId}`
+      );
+      // 兼容后端既可能返回 ApiResponse 包装，也可能直接返回原始对象
+      const maybeWrapped: any = response.data as any;
+      const data =
+        typeof maybeWrapped === "object" && "data" in maybeWrapped
+          ? maybeWrapped.data
+          : maybeWrapped;
+      return data;
+    },
+
+    /**
+     * 根据错误信息定位源代码
+     * @param data 定位请求数据
+     * @returns 定位结果
+     */
+    locateSourceCodeByError: async (
+      data: LocateSourceCodeRequest
+    ): Promise<SourceCodeLocationResult> => {
+      const response = await this.instance.post<
+        ApiResponse<SourceCodeLocationResult>
+      >("/api/source-code-sourcemap-integration/locate", data);
+      return response.data.data;
+    },
+
+    /**
+     * 准备AI诊断上下文
+     *极速模式
+     * @param data 上下文请求数据
+     * @returns 上下文结果
+     */
+    prepareAIContext: async (
+      data: PrepareAIContextRequest
+    ): Promise<AIContextResult> => {
+      const response = await this.instance.post<ApiResponse<AIContextResult>>(
+        "/api/source-code-sourcemap-integration/prepare-ai-context",
+        data
+      );
+      return response.data.data;
+    },
+
+    /**
+     * 设置活跃关联
+     * @param projectId 项目ID
+     * @param associationId 关联ID
+     * @returns 设置结果
+     */
+    setActiveAssociation: async (
+      projectId: string,
+      associationId: string
+    ): Promise<{ success: boolean; message: string }> => {
+      const response = await this.instance.post<
+        ApiResponse<{ success: boolean; message: string }>
+      >(
+        `/api/source-code-sourcemap-integration/set-active/${projectId}/${associationId}`
+      );
+      return response.data.data;
+    },
+
+    /**
+     * 删除关联
+     * @param projectId 项目ID
+     * @param associationId 关联ID
+     * @returns 删除结果
+     */
+    deleteAssociation: async (
+      projectId: string,
+      associationId: string
+    ): Promise<{ success: boolean; message: string }> => {
+      const response = await this.instance.delete<
+        ApiResponse<{ success: boolean; message: string }>
+      >(
+        `/api/source-code-sourcemap-integration/association/${projectId}/${associationId}`
+      );
+      return response.data.data;
+    },
+
+    /**
+     * 获取sourcemap文件列表
+     * @param projectId 项目ID
+     * @param version 版本号（可选）
+     * @returns 文件列表
+     */
+    getSourcemapFiles: async (
+      projectId: string,
+      version?: string
+    ): Promise<string[]> => {
+      const params: any = { projectId };
+      if (version) {
+        params.version = version;
+      }
+
+      const response = await axios.get<ApiResponse<string[]>>(
+        `${API_BASE_URL}/api/source-code-sourcemap-integration/sourcemap-files`,
+        { params }
+      );
+      return response.data.data;
+    },
+  };
+
+  /**
    * AI诊断相关接口
    */
   aiDiagnosis = {
@@ -528,8 +683,8 @@ class ApiClient {
       try {
         console.log("获取错误诊断结果，错误ID:", errorId);
 
-        const response = await this.instance.get<AiDiagnosisResult>(
-          `/api/ai-diagnosis/error/${errorId}`
+        const response = await axios.get<AiDiagnosisResult>(
+          `${API_BASE_URL}/api/ai-diagnosis/error/${errorId}`
         );
 
         console.log("获取诊断结果响应:", response);
@@ -557,9 +712,9 @@ class ApiClient {
         console.log("API客户端调用开始，错误ID:", errorId);
         console.log("请求URL:", `/api/ai-diagnosis/error/${errorId}/analyze`);
 
-        const response = await this.instance.post<
-          ApiResponse<{ taskId: string }>
-        >(`/api/ai-diagnosis/error/${errorId}/analyze`);
+        const response = await axios.post<ApiResponse<{ taskId: string }>>(
+          `${API_BASE_URL}/api/ai-diagnosis/error/${errorId}/analyze`
+        );
 
         console.log("API客户端原始响应:", response);
         console.log("响应状态:", response.status);
@@ -594,8 +749,8 @@ class ApiClient {
       try {
         console.log("获取诊断任务状态，任务ID:", taskId);
 
-        const response = await this.instance.get<DiagnosisTaskStatus>(
-          `/api/ai-diagnosis/task/${taskId}`
+        const response = await axios.get<DiagnosisTaskStatus>(
+          `${API_BASE_URL}/api/ai-diagnosis/task/${taskId}`
         );
 
         console.log("获取诊断状态响应:", response);
@@ -624,8 +779,8 @@ class ApiClient {
       try {
         console.log("获取错误聚合诊断结果，聚合ID:", aggregationId);
 
-        const response = await this.instance.get<AiDiagnosisResult>(
-          `/api/ai-diagnosis/aggregation/${aggregationId}`
+        const response = await axios.get<AiDiagnosisResult>(
+          `${API_BASE_URL}/api/ai-diagnosis/aggregation/${aggregationId}`
         );
 
         console.log("获取聚合诊断响应:", response);
@@ -652,8 +807,8 @@ export const apiClient = new ApiClient();
 export const fetchErrorDetail = apiClient.errorLogs.getDetail;
 export const fetchErrorSourceCode = async (errorId: string | number) => {
   try {
-    const response = await apiClient.instance.get(
-      `/api/error-location/error/${errorId}/source-code`
+    const response = await axios.get(
+      `${API_BASE_URL}/api/error-location/error/${errorId}/source-code`
     );
     return response.data;
   } catch (error) {

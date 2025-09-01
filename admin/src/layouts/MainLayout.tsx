@@ -63,6 +63,10 @@ const menuItems: MenuProps["items"] = [
         key: "/source-code",
         label: "源代码管理",
       },
+      {
+        key: "/source-code-sourcemap-integration",
+        label: "源码映射集成",
+      },
     ],
   },
   {

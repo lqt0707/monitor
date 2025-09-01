@@ -15,6 +15,14 @@
     "noEmit": true,
     "jsx": "react-jsx",
 
+    /* Path mapping */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"],
+      "@/services/*": ["src/services/*"],
+      "@/types/*": ["src/types/*"]
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

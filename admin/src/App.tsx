@@ -23,6 +23,7 @@ import ErrorAggregations from "./pages/errors/ErrorAggregations";
 import ErrorDetail from "./pages/errors/ErrorDetail";
 import ProjectManagement from "./pages/projects/ProjectManagement";
 import SourceCodeManager from "./pages/source-code/SourceCodeManager";
+import SourceCodeSourcemapIntegration from "./pages/source-code-sourcemap-integration/SourceCodeSourcemapIntegration";
 import UserManagement from "./pages/UserManagement";
 import PermissionManagement from "./pages/PermissionManagement";
 import StatisticsReport from "./pages/StatisticsReport";
@@ -119,6 +120,12 @@ const App: React.FC = () => {
                         <Route
                           path="/source-code"
                           element={<SourceCodeManager />}
+                        />
+
+                        {/* 源代码与Sourcemap集成 */}
+                        <Route
+                          path="/source-code-sourcemap-integration"
+                          element={<SourceCodeSourcemapIntegration />}
                         />
 
                         {/* 统计报表 */}

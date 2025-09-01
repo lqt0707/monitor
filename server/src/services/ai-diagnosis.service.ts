@@ -1,11 +1,16 @@
 import { Injectable, Logger, Inject } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository } from "typeorm";
+import { Repository, Not, IsNull } from "typeorm";
 import { ErrorAggregation } from "../modules/monitor/entities/error-aggregation.entity";
 import { ErrorLog } from "../modules/monitor/entities/error-log.entity";
 import { SourceLocation } from "../modules/sourcemap/services/sourcemap.service";
 import { DeepSeekService } from "../modules/deepseek/deepseek.service";
+import {
+  RAGEngineService,
+  RAGContext,
+  RAGAnalysisResult,
+} from "../modules/ai-diagnosis/services/rag-engine.service";
 
 /**
  * AI错误诊断服务
@@ -23,7 +28,8 @@ export class AiDiagnosisService {
     @InjectRepository(ErrorLog)
     private errorLogRepository: Repository<ErrorLog>,
     @InjectRepository(ErrorAggregation)
-    private errorAggregationRepository: Repository<ErrorAggregation>
+    private errorAggregationRepository: Repository<ErrorAggregation>,
+    private readonly ragEngine: RAGEngineService
   ) {
     this.initializeService();
   }
@@ -1098,6 +1104,127 @@ ${this.formatSourceMapForPrompt(analysisData.sourceCode)}
     } catch (error) {
       this.logger.error(`获取综合分析报告失败: ${error.message}`, error.stack);
       return null;
+    }
+  }
+
+  /**
+   * 使用RAG进行增强错误分析
+   */
+  async performRAGErrorAnalysis(
+    errorId: string | number,
+    errorContext: RAGContext
+  ): Promise<RAGAnalysisResult> {
+    try {
+      this.logger.log(`开始RAG增强错误分析: ${errorId}`);
+
+      // 执行RAG分析
+      const result = await this.ragEngine.analyzeError(errorContext);
+
+      // 存储分析结果
+      await this.storeRAGAnalysisResult(errorId, result, errorContext);
+
+      this.logger.log(`RAG增强错误分析完成: ${errorId}`);
+      return result;
+    } catch (error) {
+      this.logger.error(`RAG增强错误分析失败: ${errorId}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * 存储RAG分析结果
+   */
+  private async storeRAGAnalysisResult(
+    errorId: string | number,
+    result: RAGAnalysisResult,
+    errorContext: RAGContext
+  ): Promise<void> {
+    try {
+      let errorLog = null;
+
+      // 如果errorId是数字，尝试查找现有记录
+      if (typeof errorId === "number") {
+        errorLog = await this.errorLogRepository.findOne({
+          where: { id: errorId },
+        });
+      }
+
+      // 如果没有找到现有记录，创建一个新的
+      if (!errorLog) {
+        errorLog = this.errorLogRepository.create({
+          projectId: "test-rag-project",
+          type: "error",
+          errorHash: `rag-${Date.now()}`,
+          errorMessage: errorContext.errorMessage || "RAG分析错误",
+          errorStack: errorContext.stackTrace || "",
+          createdAt: new Date(),
+          ragAnalysisResult: JSON.stringify(result),
+          ragAnalysisGeneratedAt: new Date(),
+        });
+      } else {
+        // 更新现有记录
+        errorLog.ragAnalysisResult = JSON.stringify(result);
+        errorLog.ragAnalysisGeneratedAt = new Date();
+      }
+
+      await this.errorLogRepository.save(errorLog);
+      this.logger.log(`RAG分析结果已存储: ${errorId}`);
+    } catch (error) {
+      this.logger.error(`存储RAG分析结果失败: ${errorId}`, error.stack);
+    }
+  }
+
+  /**
+   * 获取RAG分析结果
+   */
+  async getRAGAnalysisResult(
+    analysisId: string
+  ): Promise<RAGAnalysisResult | null> {
+    try {
+      this.logger.log(`获取RAG分析结果: ${analysisId}`);
+
+      // 这里可以根据analysisId从数据库或缓存中获取结果
+      // 暂时返回null，实际实现时需要根据具体需求设计
+      return null;
+    } catch (error) {
+      this.logger.error(`获取RAG分析结果失败: ${analysisId}`, error.stack);
+      return null;
+    }
+  }
+
+  /**
+   * 获取RAG分析历史
+   */
+  async getRAGAnalysisHistory(): Promise<any[]> {
+    try {
+      this.logger.log("获取RAG分析历史");
+
+      // 使用原生SQL查询来避免TypeORM映射问题
+      const queryBuilder =
+        this.errorLogRepository.createQueryBuilder("errorLog");
+      const errorLogs = await queryBuilder
+        .select([
+          "errorLog.id",
+          "errorLog.ragAnalysisResult",
+          "errorLog.ragAnalysisGeneratedAt",
+          "errorLog.errorMessage",
+        ])
+        .where("errorLog.ragAnalysisResult IS NOT NULL")
+        .orderBy("errorLog.ragAnalysisGeneratedAt", "DESC")
+        .limit(20)
+        .getMany();
+
+      this.logger.log(`找到 ${errorLogs.length} 条RAG分析记录`);
+
+      return errorLogs.map((log) => ({
+        id: log.id,
+        errorMessage: log.errorMessage,
+        analysisResult: JSON.parse(log.ragAnalysisResult),
+        generatedAt: log.ragAnalysisGeneratedAt,
+      }));
+    } catch (error) {
+      this.logger.error("获取RAG分析历史失败", error.stack);
+      return [];
     }
   }
 }

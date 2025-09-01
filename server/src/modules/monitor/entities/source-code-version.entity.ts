@@ -110,6 +110,24 @@ export class SourceCodeVersion {
   isActive: boolean;
 
   /**
+   * 是否关联了sourcemap文件
+   */
+  @Column({ name: "has_sourcemap", default: false })
+  hasSourcemap: boolean;
+
+  /**
+   * 关联的sourcemap版本
+   */
+  @Column({ name: "sourcemap_version", length: 50, nullable: true })
+  sourcemapVersion?: string;
+
+  /**
+   * sourcemap关联时间
+   */
+  @Column({ name: "sourcemap_associated_at", type: "timestamp", nullable: true })
+  sourcemapAssociatedAt?: Date;
+
+  /**
    * 创建时间
    */
   @CreateDateColumn({ name: "created_at" })

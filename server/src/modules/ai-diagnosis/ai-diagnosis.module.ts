@@ -9,6 +9,8 @@ import { ErrorLog } from "../monitor/entities/error-log.entity";
 import { QUEUE_NAMES } from "../../config/queue.config";
 import { DeepSeekModule } from "../deepseek/deepseek.module";
 import { SourcemapModule } from "../sourcemap/sourcemap.module";
+import { SourceCodeModule } from "../source-code/source-code.module";
+import { RAGEngineService } from "./services/rag-engine.service";
 
 /**
  * AI诊断模块
@@ -20,9 +22,10 @@ import { SourcemapModule } from "../sourcemap/sourcemap.module";
     TypeOrmModule.forFeature([ErrorAggregation, ErrorLog]),
     DeepSeekModule,
     SourcemapModule,
+    SourceCodeModule,
   ],
   controllers: [AiDiagnosisController],
-  providers: [AiDiagnosisService, AiDiagnosisProcessor],
-  exports: [AiDiagnosisService],
+  providers: [AiDiagnosisService, AiDiagnosisProcessor, RAGEngineService],
+  exports: [AiDiagnosisService, RAGEngineService],
 })
 export class AiDiagnosisModule {}

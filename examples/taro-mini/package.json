@@ -30,13 +30,8 @@
     "dev:qq": "npm run build:qq -- --watch",
     "dev:jd": "npm run build:jd -- --watch",
     "dev:harmony-hybrid": "npm run build:harmony-hybrid -- --watch",
-    "pack:source": "node pack-source-code.js",
-    "pack:source:zip": "node pack-source-code.js && cd source-code-package && zip -r ../taro-source-code.zip . && cd .. && echo '压缩包已创建: taro-source-code.zip'",
-    "pack:source:optimized": "node pack-source-code-optimized.js",
-    "pack:source:advanced": "node pack-source-advanced.js",
-    "pack:source:new": "node pack-source-code-optimized.js",
-    "pack:source:config": "node pack-source-advanced.js --config=pack-source-config.json",
-    "pack:source:verbose": "node pack-source-advanced.js --verbose=true"
+    "build:monitor": "./build-with-sourcemap.sh",
+    "build:sourcemap": "npm run build:weapp"
   },
   "browserslist": [
     "defaults and fully supports es6-module",

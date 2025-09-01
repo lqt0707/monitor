@@ -207,6 +207,19 @@ export class ErrorLog {
   comprehensiveAnalysisVersion?: string;
 
   /**
+   * RAG分析结果（JSON格式）
+   * 包含基于源码检索的增强错误分析
+   */
+  @Column({ name: "rag_analysis_result", type: "text", nullable: true })
+  ragAnalysisResult?: string;
+
+  /**
+   * RAG分析生成时间
+   */
+  @Column({ name: "rag_analysis_generated_at", type: "datetime", nullable: true })
+  ragAnalysisGeneratedAt?: Date;
+
+  /**
    * 错误级别
    */
   @Column({ name: "error_level", default: 1 })

@@ -1,0 +1,95 @@
+.source-code-location {
+    margin-bottom: 16px;
+}
+
+.source-code-location .ant-card-head {
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.source-code-location .ant-card-body {
+    padding: 16px;
+}
+
+.error-location-info {
+    padding: 12px;
+    background: #fff2f0;
+    border-radius: 6px;
+    border-left: 3px solid #ff4d4f;
+}
+
+.location-description {
+    padding: 12px;
+    background: #f6ffed;
+    border-radius: 6px;
+    border-left: 3px solid #52c41a;
+}
+
+.location-description .ant-typography {
+    margin: 0;
+    line-height: 1.6;
+}
+
+/* 版本状态样式 */
+.source-code-location .ant-alert {
+    border-radius: 6px;
+    margin-bottom: 0;
+}
+
+.source-code-location .ant-alert-message {
+    line-height: 1.5;
+}
+
+/* 标签样式 */
+.source-code-location .ant-tag {
+    margin: 2px 4px 2px 0;
+}
+
+/* 按钮样式 */
+.source-code-location .ant-btn {
+    border-radius: 6px;
+}
+
+.source-code-location .ant-btn-primary {
+    background: #1890ff;
+    border-color: #1890ff;
+}
+
+.source-code-location .ant-btn-primary:hover {
+    background: #40a9ff;
+    border-color: #40a9ff;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .source-code-location .ant-card-body {
+        padding: 12px;
+    }
+
+    .error-location-info,
+    .location-description {
+        padding: 8px;
+    }
+
+    .source-code-location .ant-space {
+        gap: 8px !important;
+    }
+
+    .source-code-location .ant-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+    }
+}
+
+/* 动画效果 */
+.source-code-location .ant-alert {
+    transition: all 0.3s ease;
+}
+
+.source-code-location .ant-tag {
+    transition: all 0.2s ease;
+}
+
+.source-code-location .ant-btn {
+    transition: all 0.2s ease;
+}

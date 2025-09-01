@@ -1,8 +1,8 @@
-import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import { ClickHouseClient, createClient } from '@clickhouse/client';
-import { ErrorLog } from '../../monitor/entities/error-log.entity';
-import { ClickHouseConfig } from '../../../config/database.config';
+import { Injectable, Logger, OnModuleInit } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import { ClickHouseClient, createClient } from "@clickhouse/client";
+import { ErrorLog } from "../../monitor/entities/error-log.entity";
+import { ClickHouseConfig } from "../../../config/database.config";
 
 /**
  * ClickHouse数据库服务
@@ -48,7 +48,7 @@ export class ClickHouseService implements OnModuleInit {
       // 测试连接
       await this.client.ping();
       this.isConnected = true;
-      this.logger.log('ClickHouse连接成功');
+      this.logger.log("ClickHouse连接成功");
     } catch (error) {
       this.logger.error(`ClickHouse连接失败: ${error.message}`);
       this.isConnected = false;
@@ -60,14 +60,14 @@ export class ClickHouseService implements OnModuleInit {
    */
   private async initializeTables() {
     if (!this.isConnected) {
-      this.logger.warn('ClickHouse未连接，跳过表初始化');
+      this.logger.warn("ClickHouse未连接，跳过表初始化");
       return;
     }
 
     try {
       // 创建错误日志表
       await this.createErrorLogsTable();
-      this.logger.log('ClickHouse表初始化完成');
+      this.logger.log("ClickHouse表初始化完成");
     } catch (error) {
       this.logger.error(`ClickHouse表初始化失败: ${error.message}`);
     }
@@ -115,7 +115,7 @@ export class ClickHouseService implements OnModuleInit {
     `;
 
     await this.client.exec({ query: createTableSQL });
-    
+
     // 创建物化视图用于快速聚合查询
     await this.createMaterializedViews();
   }
@@ -124,44 +124,109 @@ export class ClickHouseService implements OnModuleInit {
    * 创建物化视图优化常用查询
    */
   private async createMaterializedViews() {
-    // 按小时统计的错误数量物化视图
-    const hourlyStatsSQL = `
-      CREATE MATERIALIZED VIEW IF NOT EXISTS error_logs_hourly_stats
-      ENGINE = SummingMergeTree()
-      ORDER BY (project_id, error_hour, type)
-      POPULATE
-      AS SELECT
-        project_id,
-        error_hour,
-        type,
-        count() as total_count,
-        uniq(error_hash) as unique_count
-      FROM error_logs
-      GROUP BY project_id, error_hour, type
-    `;
-
-    // 按天统计的错误数量物化视图
-    const dailyStatsSQL = `
-      CREATE MATERIALIZED VIEW IF NOT EXISTS error_logs_daily_stats
-      ENGINE = SummingMergeTree()
-      ORDER BY (project_id, error_date, type)
-      POPULATE
-      AS SELECT
-        project_id,
-        error_date,
-        type,
-        count() as total_count,
-        uniq(error_hash) as unique_count
-      FROM error_logs
-      GROUP BY project_id, error_date, type
-    `;
-
     try {
+      // 先检查表是否存在数据
+      const checkDataSQL = `SELECT count() as total FROM error_logs LIMIT 1`;
+      const result = await this.client.query({ query: checkDataSQL });
+      const hasData = await result.json();
+      const totalCount = hasData[0]?.total || 0;
+
+      if (totalCount === 0) {
+        this.logger.log("ClickHouse表为空，跳过物化视图创建");
+        return;
+      }
+
+      // 按小时统计的错误数量物化视图
+      const hourlyStatsSQL = `
+        CREATE MATERIALIZED VIEW IF NOT EXISTS error_logs_hourly_stats
+        ENGINE = SummingMergeTree()
+        ORDER BY (project_id, error_hour, type)
+        AS SELECT
+          project_id,
+          toStartOfHour(created_at) as error_hour,
+          type,
+          count() as total_count,
+          uniq(error_hash) as unique_count
+        FROM error_logs
+        GROUP BY project_id, error_hour, type
+      `;
+
+      // 按天统计的错误数量物化视图
+      const dailyStatsSQL = `
+        CREATE MATERIALIZED VIEW IF NOT EXISTS error_logs_daily_stats
+        ENGINE = SummingMergeTree()
+        ORDER BY (project_id, error_date, type)
+        AS SELECT
+          project_id,
+          toDate(created_at) as error_date,
+          type,
+          count() as total_count,
+          uniq(error_hash) as unique_count
+        FROM error_logs
+        GROUP BY project_id, error_date, type
+      `;
+
+      // 删除已存在的物化视图（如果存在）
+      try {
+        await this.client.exec({
+          query: "DROP VIEW IF EXISTS error_logs_hourly_stats",
+        });
+        await this.client.exec({
+          query: "DROP VIEW IF EXISTS error_logs_daily_stats",
+        });
+        this.logger.log("已删除旧的物化视图");
+      } catch (dropError) {
+        this.logger.debug(
+          "删除旧物化视图时出现错误（可能是首次创建）:",
+          dropError.message
+        );
+      }
+
+      // 创建新的物化视图
       await this.client.exec({ query: hourlyStatsSQL });
       await this.client.exec({ query: dailyStatsSQL });
-      this.logger.log('ClickHouse物化视图创建完成');
+
+      // 如果表中有数据，填充物化视图
+      if (totalCount > 0) {
+        try {
+          // 使用更安全的查询方式，确保物化字段正确计算
+          const hourlyDataSQL = `
+            INSERT INTO error_logs_hourly_stats 
+            SELECT 
+              project_id,
+              toStartOfHour(created_at) as error_hour,
+              type,
+              count() as total_count,
+              uniq(error_hash) as unique_count
+            FROM error_logs 
+            GROUP BY project_id, error_hour, type
+          `;
+
+          const dailyDataSQL = `
+            INSERT INTO error_logs_daily_stats 
+            SELECT 
+              project_id,
+              toDate(created_at) as error_date,
+              type,
+              count() as total_count,
+              uniq(error_hash) as unique_count
+            FROM error_logs 
+            GROUP BY project_id, error_date, type
+          `;
+
+          await this.client.exec({ query: hourlyDataSQL });
+          await this.client.exec({ query: dailyDataSQL });
+          this.logger.log("物化视图数据填充完成");
+        } catch (fillError) {
+          this.logger.warn(`填充物化视图数据失败: ${fillError.message}`);
+          // 不抛出错误，让服务继续运行
+        }
+      }
+
+      this.logger.log("ClickHouse物化视图创建完成");
     } catch (error) {
       this.logger.warn(`创建物化视图失败: ${error.message}`);
+      // 不抛出错误，让服务继续运行
     }
   }
 
@@ -171,33 +236,35 @@ export class ClickHouseService implements OnModuleInit {
    */
   async insertErrorLog(errorLog: Partial<ErrorLog>): Promise<void> {
     if (!this.isConnected) {
-      this.logger.warn('ClickHouse未连接，无法插入数据');
+      this.logger.warn("ClickHouse未连接，无法插入数据");
       return;
     }
 
     try {
       await this.client.insert({
-        table: 'error_logs',
-        values: [{
-          id: errorLog.id || 0,
-          project_id: errorLog.projectId,
-          type: errorLog.type,
-          error_hash: errorLog.errorHash,
-          error_message: errorLog.errorMessage,
-          error_stack: errorLog.errorStack || null,
-          page_url: errorLog.pageUrl || null,
-          user_id: errorLog.userId || null,
-          user_agent: errorLog.userAgent || null,
-          device_info: errorLog.deviceInfo || null,
-          network_info: errorLog.networkInfo || null,
-          performance_data: errorLog.performanceData || null,
-          source_file: errorLog.sourceFile || null,
-          source_line: errorLog.sourceLine || null,
-          source_column: errorLog.sourceColumn || null,
-          extra_data: errorLog.extraData || null,
-          created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
-        }],
-        format: 'JSONEachRow',
+        table: "error_logs",
+        values: [
+          {
+            id: errorLog.id || 0,
+            project_id: errorLog.projectId,
+            type: errorLog.type,
+            error_hash: errorLog.errorHash,
+            error_message: errorLog.errorMessage,
+            error_stack: errorLog.errorStack || null,
+            page_url: errorLog.pageUrl || null,
+            user_id: errorLog.userId || null,
+            user_agent: errorLog.userAgent || null,
+            device_info: errorLog.deviceInfo || null,
+            network_info: errorLog.networkInfo || null,
+            performance_data: errorLog.performanceData || null,
+            source_file: errorLog.sourceFile || null,
+            source_line: errorLog.sourceLine || null,
+            source_column: errorLog.sourceColumn || null,
+            extra_data: errorLog.extraData || null,
+            created_at: new Date().toISOString().slice(0, 19).replace("T", " "),
+          },
+        ],
+        format: "JSONEachRow",
       });
 
       this.logger.debug(`错误日志已插入ClickHouse: ${errorLog.projectId}`);
@@ -217,7 +284,7 @@ export class ClickHouseService implements OnModuleInit {
     }
 
     try {
-      const values = errorLogs.map(errorLog => ({
+      const values = errorLogs.map((errorLog) => ({
         id: errorLog.id || 0,
         project_id: errorLog.projectId,
         type: errorLog.type,
@@ -234,13 +301,13 @@ export class ClickHouseService implements OnModuleInit {
         source_line: errorLog.sourceLine || null,
         source_column: errorLog.sourceColumn || null,
         extra_data: errorLog.extraData || null,
-        created_at: new Date().toISOString().slice(0, 19).replace('T', ' ')
+        created_at: new Date().toISOString().slice(0, 19).replace("T", " "),
       }));
 
       await this.client.insert({
-        table: 'error_logs',
+        table: "error_logs",
         values,
-        format: 'JSONEachRow',
+        format: "JSONEachRow",
       });
 
       this.logger.debug(`批量插入${errorLogs.length}条错误日志到ClickHouse`);
@@ -257,41 +324,57 @@ export class ClickHouseService implements OnModuleInit {
    * 2. 添加查询超时设置
    * 3. 支持采样查询优化性能
    */
-  async queryErrorLogs(projectId: string, options: {
-    startTime?: Date;
-    endTime?: Date;
-    type?: string;
-    limit?: number;
-    offset?: number;
-    sample?: number; // 采样率，0-1之间
-  } = {}): Promise<any[]> {
+  async queryErrorLogs(
+    projectId: string,
+    options: {
+      startTime?: Date;
+      endTime?: Date;
+      type?: string;
+      limit?: number;
+      offset?: number;
+      sample?: number; // 采样率，0-1之间
+    } = {}
+  ): Promise<any[]> {
     if (!this.isConnected) {
-      this.logger.warn('ClickHouse未连接，无法查询数据');
+      this.logger.warn("ClickHouse未连接，无法查询数据");
       return [];
     }
 
     try {
-      const { startTime, endTime, type, limit = 100, offset = 0, sample } = options;
-      
+      const {
+        startTime,
+        endTime,
+        type,
+        limit = 100,
+        offset = 0,
+        sample,
+      } = options;
+
       const queryParams: any = { project_id: projectId };
-      let whereClause = 'project_id = {project_id:String}';
-      
+      let whereClause = "project_id = {project_id:String}";
+
       if (startTime) {
-        whereClause += ' AND created_at >= {start_time:DateTime}';
-        queryParams.start_time = startTime.toISOString().slice(0, 19).replace('T', ' ');
+        whereClause += " AND created_at >= {start_time:DateTime}";
+        queryParams.start_time = startTime
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
       }
-      
+
       if (endTime) {
-        whereClause += ' AND created_at <= {end_time:DateTime}';
-        queryParams.end_time = endTime.toISOString().slice(0, 19).replace('T', ' ');
+        whereClause += " AND created_at <= {end_time:DateTime}";
+        queryParams.end_time = endTime
+          .toISOString()
+          .slice(0, 19)
+          .replace("T", " ");
       }
-      
+
       if (type) {
-        whereClause += ' AND type = {type:String}';
+        whereClause += " AND type = {type:String}";
         queryParams.type = type;
       }
 
-      let sampleClause = '';
+      let sampleClause = "";
       if (sample && sample > 0 && sample <= 1) {
         sampleClause = `SAMPLE ${sample}`;
       }
@@ -312,11 +395,11 @@ export class ClickHouseService implements OnModuleInit {
       const result = await this.client.query({
         query,
         query_params: queryParams,
-        format: 'JSONEachRow',
+        format: "JSONEachRow",
         clickhouse_settings: {
           max_execution_time: 30, // 30秒超时
-          max_block_size: '10000',
-        }
+          max_block_size: "10000",
+        },
       });
 
       return await result.json();
@@ -333,23 +416,26 @@ export class ClickHouseService implements OnModuleInit {
    * 2. 支持多种时间粒度统计
    * 3. 添加缓存机制
    */
-  async getErrorStats(projectId: string, options: {
-    timeRange?: number; // 小时数
-    granularity?: 'hour' | 'day' | 'total'; // 统计粒度
-    useCache?: boolean; // 是否使用缓存
-  } = {}): Promise<any> {
+  async getErrorStats(
+    projectId: string,
+    options: {
+      timeRange?: number; // 小时数
+      granularity?: "hour" | "day" | "total"; // 统计粒度
+      useCache?: boolean; // 是否使用缓存
+    } = {}
+  ): Promise<any> {
     if (!this.isConnected) {
-      this.logger.warn('ClickHouse未连接，无法获取统计数据');
+      this.logger.warn("ClickHouse未连接，无法获取统计数据");
       return null;
     }
 
-    const { timeRange = 24, granularity = 'total', useCache = true } = options;
+    const { timeRange = 24, granularity = "total", useCache = true } = options;
 
     try {
       let query: string;
       let queryParams: any = { project_id: projectId };
 
-      if (granularity === 'hour' && timeRange <= 72) {
+      if (granularity === "hour" && timeRange <= 72) {
         // 使用小时级物化视图（最近72小时内）
         query = `
           SELECT
@@ -363,7 +449,7 @@ export class ClickHouseService implements OnModuleInit {
           GROUP BY type
           ORDER BY count DESC
         `;
-      } else if (granularity === 'day' && timeRange <= 365) {
+      } else if (granularity === "day" && timeRange <= 365) {
         // 使用天级物化视图（最近365天内）
         query = `
           SELECT
@@ -398,11 +484,11 @@ export class ClickHouseService implements OnModuleInit {
       const result = await this.client.query({
         query,
         query_params: queryParams,
-        format: 'JSONEachRow',
+        format: "JSONEachRow",
         clickhouse_settings: {
           max_execution_time: 10,
           use_uncompressed_cache: useCache ? 1 : 0,
-        }
+        },
       });
 
       return await result.json();
@@ -418,43 +504,48 @@ export class ClickHouseService implements OnModuleInit {
    * @param timeRange 时间范围（小时）
    * @param granularity 时间粒度
    */
-  async getErrorTrend(projectId: string, options: {
-    timeRange?: number;
-    granularity?: 'hour' | 'day';
-    type?: string;
-  } = {}): Promise<any[]> {
+  async getErrorTrend(
+    projectId: string,
+    options: {
+      timeRange?: number;
+      granularity?: "hour" | "day";
+      type?: string;
+    } = {}
+  ): Promise<any[]> {
     if (!this.isConnected) {
       return [];
     }
 
-    const { timeRange = 24, granularity = 'hour', type } = options;
+    const { timeRange = 24, granularity = "hour", type } = options;
 
     try {
       let timeExpr: string;
       let table: string;
-      
-      if (granularity === 'hour') {
-        timeExpr = 'toStartOfHour(created_at) as time_bucket';
-        table = 'error_logs';
+
+      if (granularity === "hour") {
+        timeExpr = "toStartOfHour(created_at) as time_bucket";
+        table = "error_logs";
       } else {
-        timeExpr = 'toDate(created_at) as time_bucket';
-        table = 'error_logs_daily_stats';
+        timeExpr = "toDate(created_at) as time_bucket";
+        table = "error_logs_daily_stats";
       }
 
-      let whereClause = 'project_id = {project_id:String}';
+      let whereClause = "project_id = {project_id:String}";
       const queryParams: any = { project_id: projectId };
 
       if (type) {
-        whereClause += ' AND type = {type:String}';
+        whereClause += " AND type = {type:String}";
         queryParams.type = type;
       }
 
-      if (granularity === 'hour') {
-        whereClause += ' AND created_at >= now() - INTERVAL {time_range:UInt32} HOUR';
+      if (granularity === "hour") {
+        whereClause +=
+          " AND created_at >= now() - INTERVAL {time_range:UInt32} HOUR";
       } else {
-        whereClause += ' AND error_date >= today() - INTERVAL {time_range:UInt32} DAY';
+        whereClause +=
+          " AND error_date >= today() - INTERVAL {time_range:UInt32} DAY";
       }
-      
+
       queryParams.time_range = timeRange;
 
       const query = `
@@ -471,7 +562,7 @@ export class ClickHouseService implements OnModuleInit {
       const result = await this.client.query({
         query,
         query_params: queryParams,
-        format: 'JSONEachRow',
+        format: "JSONEachRow",
       });
 
       return await result.json();
@@ -487,14 +578,14 @@ export class ClickHouseService implements OnModuleInit {
   async checkHealth(): Promise<{ status: string; connected: boolean }> {
     try {
       if (!this.client) {
-        return { status: 'error', connected: false };
+        return { status: "error", connected: false };
       }
 
       await this.client.ping();
-      return { status: 'ok', connected: true };
+      return { status: "ok", connected: true };
     } catch (error) {
       this.logger.error(`ClickHouse健康检查失败: ${error.message}`);
-      return { status: 'error', connected: false };
+      return { status: "error", connected: false };
     }
   }
 
@@ -504,7 +595,7 @@ export class ClickHouseService implements OnModuleInit {
   async onModuleDestroy() {
     if (this.client) {
       await this.client.close();
-      this.logger.log('ClickHouse连接已关闭');
+      this.logger.log("ClickHouse连接已关闭");
     }
   }
 
@@ -517,10 +608,10 @@ export class ClickHouseService implements OnModuleInit {
       const result = await this.client.query({
         query: `SELECT count() FROM system.tables WHERE name = {tableName:String}`,
         query_params: { tableName },
-        format: 'JSONEachRow',
+        format: "JSONEachRow",
       });
-      
-      const data = await result.json() as any[];
+
+      const data = (await result.json()) as any[];
       return data.length > 0 && data[0].count > 0;
     } catch (error) {
       this.logger.warn(`检查表存在失败: ${error.message}`);
@@ -533,9 +624,9 @@ export class ClickHouseService implements OnModuleInit {
    */
   private async migrateExistingData(): Promise<void> {
     try {
-      const oldTableExists = await this.checkTableExists('error_logs');
+      const oldTableExists = await this.checkTableExists("error_logs");
       if (!oldTableExists) {
-        this.logger.log('旧表不存在，跳过数据迁移');
+        this.logger.log("旧表不存在，跳过数据迁移");
         return;
       }
 
@@ -559,16 +650,16 @@ export class ClickHouseService implements OnModuleInit {
 
         const migratedCount = result.query_id ? batchSize : 0;
         totalMigrated += migratedCount;
-        
+
         if (migratedCount < batchSize) {
           break;
         }
-        
+
         offset += batchSize;
         this.logger.log(`已迁移 ${totalMigrated} 条数据到优化表`);
-        
+
         // 避免过快迁移导致性能问题
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
 
       this.logger.log(`数据迁移完成，共迁移 ${totalMigrated} 条记录`);
@@ -582,11 +673,13 @@ export class ClickHouseService implements OnModuleInit {
    */
   private async getOptimalTableName(): Promise<string> {
     try {
-      const optimizedTableExists = await this.checkTableExists('error_logs_optimized');
-      return optimizedTableExists ? 'error_logs_optimized' : 'error_logs';
+      const optimizedTableExists = await this.checkTableExists(
+        "error_logs_optimized"
+      );
+      return optimizedTableExists ? "error_logs_optimized" : "error_logs";
     } catch (error) {
       this.logger.warn(`获取最优表名失败，使用默认表: ${error.message}`);
-      return 'error_logs';
+      return "error_logs";
     }
   }
 
@@ -614,7 +707,7 @@ export class ClickHouseService implements OnModuleInit {
 
       const result = await this.client.query({
         query,
-        format: 'JSONEachRow',
+        format: "JSONEachRow",
       });
 
       return await result.json();
@@ -653,7 +746,7 @@ export class ClickHouseService implements OnModuleInit {
 
       const result = await this.client.query({
         query,
-        format: 'JSONEachRow',
+        format: "JSONEachRow",
       });
 
       return await result.json();
@@ -691,7 +784,7 @@ export class ClickHouseService implements OnModuleInit {
   /**
    * 性能优化：重新压缩表数据
    */
-  async optimizeTable(tableName: string = 'error_logs'): Promise<void> {
+  async optimizeTable(tableName: string = "error_logs"): Promise<void> {
     if (!this.isConnected) {
       return;
     }
