@@ -90,7 +90,7 @@
     "lint:check": "eslint **/*.{ts,js} --ignore-path .gitignore",
     "format": "prettier --write **/*.{ts,js,json,md} --ignore-path .gitignore",
     "format:check": "prettier --check **/*.{ts,js,json,md} --ignore-path .gitignore",
-    "size": "npm run build:prod && bundlesize",
+    "size": "bundlesize",
     "analyze": "cross-env ANALYZE=true NODE_ENV=production npm run build && npm run analyze:open",
     "analyze:open": "open web-core/dist/stats.html && open taro-core/dist/stats.html",
     "analyze:web": "cross-env ANALYZE=true npm run build:web",

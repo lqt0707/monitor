@@ -27,7 +27,7 @@ export class WebMonitorSDK extends BaseManager {
   public static init(config: MonitorConfig): WebMonitorSDK {
     if (WebMonitorSDK.instance) {
       console.warn(
-        "[WebMonitorSDK] SDK already initialized, returning existing instance"
+        "[WebMonitorSDK] SDK already initialized, returning existing instance",
       );
       return WebMonitorSDK.instance;
     }

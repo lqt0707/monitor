@@ -42,7 +42,7 @@ const Templates = {
  */
 function createConfig(
   template: any,
-  overrides: Partial<MonitorConfig> = {}
+  overrides: Partial<MonitorConfig> = {},
 ): MonitorConfig {
   return {
     ...template,
@@ -73,7 +73,7 @@ export class TaroMonitorSDK extends BaseManager {
   public static init(config: MonitorConfig): TaroMonitorSDK {
     if (TaroMonitorSDK.instance) {
       console.warn(
-        "[TaroMonitorSDK] SDK already initialized, returning existing instance"
+        "[TaroMonitorSDK] SDK already initialized, returning existing instance",
       );
       return TaroMonitorSDK.instance;
     }
@@ -123,7 +123,7 @@ const TaroMonitorSDKHelper = {
     taro: (
       projectId: string,
       serverUrl: string,
-      options: Partial<MonitorConfig> = {}
+      options: Partial<MonitorConfig> = {},
     ) => {
       const config = createConfig(Templates.TaroBasic, {
         projectId,

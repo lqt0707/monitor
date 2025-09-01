@@ -225,9 +225,9 @@ if (!target || target === 'taro') {
 
 // 主入口模块
 if (!target || target === 'main') {
-    if (checkInputFile('index.ts')) {
+    if (checkInputFile('src/index.ts')) {
         const mainBase = {
-            input: 'index.ts',
+            input: 'src/index.ts',
             external: [],
             plugins: createPlugins('./tsconfig.json')
         };
@@ -254,7 +254,7 @@ if (!target || target === 'main') {
             },
             // 类型定义
             {
-                input: 'index.ts',
+                input: 'src/index.ts',
                 output: {
                     file: 'dist/index.d.ts',
                     format: 'es'

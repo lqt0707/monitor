@@ -1,0 +1,47 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # 监控系统Server
+  - job_name: "monitor-server"
+    static_configs:
+      - targets: ["server:3000"]
+    metrics_path: "/api/metrics"
+    scrape_interval: 30s
+
+  # 监控系统Admin
+  - job_name: "monitor-admin"
+    static_configs:
+      - targets: ["admin:3000"]
+    metrics_path: "/health"
+    scrape_interval: 30s
+
+  # MySQL监控
+  - job_name: "mysql"
+    static_configs:
+      - targets: ["mysql:3306"]
+    scrape_interval: 60s
+
+  # Redis监控
+  - job_name: "redis"
+    static_configs:
+      - targets: ["redis:6379"]
+    scrape_interval: 30s
+
+  # ClickHouse监控
+  - job_name: "clickhouse"
+    static_configs:
+      - targets: ["clickhouse:8123"]
+    metrics_path: "/metrics"
+    scrape_interval: 60s
+
+  # 系统监控
+  - job_name: "node-exporter"
+    static_configs:
+      - targets: ["localhost:9100"]
+    scrape_interval: 60s
