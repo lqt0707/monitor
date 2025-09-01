@@ -1,6 +1,6 @@
 {
   "name": "@error-monitor/sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Monitor SDK - 多平台前端监控SDK解决方案，支持自动环境检测，Web、Taro小程序一站式监控方案",
   "keywords": [

@@ -1,6 +1,6 @@
 {
   "name": "@error-monitor/taro-sdk",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Monitor Taro SDK - 专为Taro小程序设计的前端监控SDK，支持微信、支付宝、百度等小程序平台",
   "keywords": [
     "monitor",
