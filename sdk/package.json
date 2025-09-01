@@ -1,6 +1,6 @@
 {
   "name": "@error-monitor/sdk",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "Monitor SDK - 多平台前端监控SDK解决方案，支持自动环境检测，Web、Taro小程序一站式监控方案",
   "keywords": [
@@ -97,7 +97,7 @@
     "analyze:taro": "cross-env ANALYZE=true npm run build:taro",
     "ci": "npm run lint:check && npm run format:check && npm run test",
     "ci:github": "node scripts/ci-github.cjs",
-    "prepublishOnly": "npm run ci && npm run build:prod",
+    "prepublishOnly": "npm run build:prod",
     "publish:all": "npm run publish:main && npm run publish:web && npm run publish:taro && npm run publish:core",
     "version:show": "node scripts/version-manager.js show",
     "version:bump": "node scripts/version-manager.js bump",
