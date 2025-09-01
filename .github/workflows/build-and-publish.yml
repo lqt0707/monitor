@@ -17,73 +17,80 @@ on:
   workflow_dispatch:
 
 jobs:
-  # 版本检测和构建测试
+  # 构建和测试
   build-and-test:
     runs-on: ubuntu-latest
-
+    
     strategy:
       matrix:
         node-version: [18.x, 20.x]
-
+    
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
-          cache-dependency-path: sdk/package-lock.json
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: "npm"
+        cache-dependency-path: sdk/package-lock.json
 
-      - name: Install dependencies
-        run: npm ci
-        working-directory: ./sdk
+    - name: Install dependencies
+      run: npm ci
+      working-directory: ./sdk
 
-      - name: Build all modules
-        run: npm run build
-        working-directory: ./sdk
-        env:
-          NODE_ENV: production
+    - name: Build all modules
+      run: |
+        echo "🚀 开始构建所有模块..."
+        npm run build
+        echo "✅ 构建完成"
+      working-directory: ./sdk
+      env:
+        NODE_ENV: production
 
-      - name: Verify build artifacts
-        run: |
-          # 检查所有模块的构建产物
-          echo "🔍 检查构建产物..."
+    - name: Verify build artifacts
+      run: |
+        echo "🔍 检查构建产物..."
+        
+        # 简化检查逻辑，只检查关键文件
+        echo "📁 当前目录:"
+        ls -la
+        
+        # 检查构建产物
+        MISSING_FILES=""
+        
+        if [ ! -f "core/dist/index.js" ]; then
+          MISSING_FILES="$MISSING_FILES core/dist/index.js"
+        fi
+        
+        if [ ! -f "web-core/dist/index.js" ]; then
+          MISSING_FILES="$MISSING_FILES web-core/dist/index.js"
+        fi
+        
+        if [ ! -f "taro-core/dist/index.js" ]; then
+          MISSING_FILES="$MISSING_FILES taro-core/dist/index.js"
+        fi
+        
+        if [ ! -f "dist/index.js" ]; then
+          MISSING_FILES="$MISSING_FILES dist/index.js"
+        fi
+        
+        if [ -n "$MISSING_FILES" ]; then
+          echo "❌ 缺少构建产物: $MISSING_FILES"
+          echo "📁 显示所有dist目录内容:"
+          find . -name "dist" -type d -exec ls -la {} \; 2>/dev/null || echo "无dist目录"
+          exit 1
+        fi
+        
+        echo "✅ 所有构建产物检查通过"
+      working-directory: ./sdk
 
-          # 检查core模块
-          if [ ! -f "core/dist/index.js" ]; then
-            echo "❌ core模块构建失败"
-            exit 1
-          fi
-
-          # 检查web模块
-          if [ ! -f "web-core/dist/index.js" ]; then
-            echo "❌ web模块构建失败"
-            exit 1
-          fi
-
-          # 检查taro模块
-          if [ ! -f "taro-core/dist/index.js" ]; then
-            echo "❌ taro模块构建失败"
-            exit 1
-          fi
-
-          # 检查main模块
-          if [ ! -f "dist/index.js" ]; then
-            echo "❌ main模块构建失败"
-            exit 1
-          fi
-
-          echo "✅ 所有模块构建成功"
-          ls -la */dist/ | grep -E "(core|web-core|taro-core|main)"
-        working-directory: ./sdk
-
-      - name: Run tests
-        run: npm test
-        working-directory: ./sdk
+    - name: Run tests
+      run: npm test
+      working-directory: ./sdk
 
   # 版本检测和发布准备
   check-version-and-prepare:
@@ -115,8 +122,8 @@ jobs:
           CURRENT_VERSION=$(node -p "require('./sdk/package.json').version")
           echo "当前版本: $CURRENT_VERSION"
 
-          # 获取上一次提交的版本
-          PREVIOUS_VERSION=$(git show HEAD~1:./sdk/package.json | node -p "require('fs').readFileSync(0, 'utf8')" | node -p "require('fs').readFileSync(0, 'utf8')" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" 2>/dev/null || echo "0.0.0")
+          # 获取上一次提交的版本（简化逻辑）
+          PREVIOUS_VERSION=$(git show HEAD~1:./sdk/package.json 2>/dev/null | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" 2>/dev/null || echo "0.0.0")
           echo "上一次版本: $PREVIOUS_VERSION"
 
           # 检查版本是否发生变化

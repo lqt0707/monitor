@@ -1,6 +1,6 @@
 {
-  "name": "@monitor/core",
-  "version": "1.0.0",
+  "name": "@error-monitor/core",
+  "version": "1.1.0",
   "description": "Monitor Core - 前端监控SDK核心模块，提供跨平台的监控基础能力",
   "keywords": [
     "monitor",

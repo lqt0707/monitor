@@ -1,6 +1,6 @@
 {
-  "name": "@monitor/web-sdk",
-  "version": "1.0.0",
+  "name": "@error-monitor/web-sdk",
+  "version": "1.1.0",
   "description": "Monitor Web SDK - 专为Web平台设计的前端监控SDK，轻量级、高性能、开箱即用",
   "keywords": [
     "monitor",

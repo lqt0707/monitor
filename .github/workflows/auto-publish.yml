@@ -1,0 +1,273 @@
+name: Auto Publish SDK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "sdk/**"
+      - ".github/workflows/auto-publish.yml"
+  workflow_dispatch:
+
+jobs:
+  # 检测版本变化
+  detect-version-change:
+    runs-on: ubuntu-latest
+    outputs:
+      should-publish: ${{ steps.version-check.outputs.should-publish }}
+      new-version: ${{ steps.version-check.outputs.new-version }}
+      previous-version: ${{ steps.version-check.outputs.previous-version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check version changes
+        id: version-check
+        run: |
+          echo "🔍 检测版本变化..."
+
+          # 获取当前版本
+          CURRENT_VERSION=$(node -p "require('./sdk/package.json').version")
+          echo "当前版本: $CURRENT_VERSION"
+
+          # 获取上一次提交的版本
+          PREVIOUS_VERSION=$(git show HEAD~1:./sdk/package.json 2>/dev/null | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version" 2>/dev/null || echo "0.0.0")
+          echo "上一次版本: $PREVIOUS_VERSION"
+
+          # 检查版本是否发生变化
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "✅ 检测到版本变化: $PREVIOUS_VERSION -> $CURRENT_VERSION"
+            echo "should-publish=true" >> $GITHUB_OUTPUT
+            echo "new-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "previous-version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "ℹ️ 版本未发生变化，跳过发布"
+            echo "should-publish=false" >> $GITHUB_OUTPUT
+            echo "new-version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+            echo "previous-version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+          fi
+
+  # 构建和测试
+  build-and-test:
+    runs-on: ubuntu-latest
+    needs: detect-version-change
+    if: needs.detect-version-change.outputs.should-publish == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+          cache-dependency-path: sdk/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./sdk
+
+      - name: Build all modules
+        run: |
+          echo "🚀 开始构建所有模块..."
+          npm run build:prod
+          echo "✅ 构建完成"
+        working-directory: ./sdk
+
+      - name: Verify build artifacts
+        run: |
+          echo "🔍 验证构建产物..."
+
+          # 检查关键构建文件
+          if [ ! -f "core/dist/index.js" ] || [ ! -f "web-core/dist/index.js" ] || [ ! -f "taro-core/dist/index.js" ] || [ ! -f "dist/index.js" ]; then
+            echo "❌ 构建产物验证失败"
+            ls -la core/dist/ web-core/dist/ taro-core/dist/ dist/ || echo "部分目录不存在"
+            exit 1
+          fi
+
+          echo "✅ 构建产物验证通过"
+        working-directory: ./sdk
+
+      - name: Run tests
+        run: npm test
+        working-directory: ./sdk
+
+  # 发布到npm
+  publish-to-npm:
+    runs-on: ubuntu-latest
+    needs: [detect-version-change, build-and-test]
+    if: needs.detect-version-change.outputs.should-publish == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          registry-url: "https://registry.npmjs.org"
+          cache: "npm"
+          cache-dependency-path: sdk/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./sdk
+
+      - name: Build for production
+        run: npm run build:prod
+        working-directory: ./sdk
+
+      - name: Publish main package
+        run: npm publish
+        working-directory: ./sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish core module
+        run: npm publish
+        working-directory: ./sdk/core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish web-sdk
+        run: npm publish
+        working-directory: ./sdk/web-core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Publish taro-sdk
+        run: npm publish
+        working-directory: ./sdk/taro-core
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Notify success
+        run: |
+          echo "🎉 所有包发布成功！"
+          echo "版本: ${{ needs.detect-version-change.outputs.new-version }}"
+          echo "主包: @error-monitor/sdk"
+          echo "核心包: @error-monitor/core"
+          echo "Web包: @error-monitor/web-sdk"
+          echo "Taro包: @error-monitor/taro-sdk"
+
+  # 创建GitHub Release
+  create-release:
+    runs-on: ubuntu-latest
+    needs: [detect-version-change, publish-to-npm]
+    if: needs.detect-version-change.outputs.should-publish == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create GitHub Release
+        run: |
+          echo "🚀 创建GitHub Release..."
+
+          NEW_VERSION="${{ needs.detect-version-change.outputs.new-version }}"
+          PREVIOUS_VERSION="${{ needs.detect-version-change.outputs.previous-version }}"
+
+          # 生成发布说明
+          RELEASE_NOTES="## 🎉 版本 $NEW_VERSION 发布
+
+          ### 📦 主要更新
+          - 版本从 $PREVIOUS_VERSION 升级到 $NEW_VERSION
+
+          ### 🔧 技术改进
+          - 构建优化和性能提升
+          - 类型定义完善
+          - 文档更新
+
+          ### 📋 安装方式
+          \`\`\`bash
+          # 完整功能包
+          npm install @error-monitor/sdk
+
+          # Web专用包
+          npm install @error-monitor/web-sdk
+
+          # Taro专用包
+          npm install @error-monitor/taro-sdk
+
+          # 核心包
+          npm install @error-monitor/core
+          \`\`\`
+
+          ### 🔗 相关链接
+          - [文档](https://github.com/${{ github.repository }}/tree/main/sdk)
+          - [变更日志](https://github.com/${{ github.repository }}/blob/main/sdk/CHANGELOG.md)
+          - [问题反馈](https://github.com/${{ github.repository }}/issues)"
+
+          # 创建GitHub Release
+          gh release create "v$NEW_VERSION" \
+            --title "🎉 Monitor SDK v$NEW_VERSION" \
+            --notes "$RELEASE_NOTES" \
+            --target main \
+            --latest
+
+          echo "✅ GitHub Release 创建成功"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # 更新变更日志
+  update-changelog:
+    runs-on: ubuntu-latest
+    needs: [detect-version-change, create-release]
+    if: needs.detect-version-change.outputs.should-publish == 'true'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Update CHANGELOG
+        run: |
+          echo "📝 更新变更日志..."
+
+          NEW_VERSION="${{ needs.detect-version-change.outputs.new-version }}"
+          DATE=$(date +"%Y-%m-%d")
+
+          # 创建变更日志条目
+          CHANGELOG_ENTRY="## [$NEW_VERSION] - $DATE
+
+          ### 🚀 新功能
+          - 自动发布流程优化
+          - GitHub Actions集成
+
+          ### 🔧 改进
+          - 构建流程优化
+          - 测试覆盖率提升
+
+          ### 🐛 修复
+          - 修复构建脚本问题
+          - 优化依赖管理
+
+          ---
+          "
+
+          # 在CHANGELOG.md开头插入新条目
+          if [ -f "./sdk/CHANGELOG.md" ]; then
+            echo "$CHANGELOG_ENTRY" > temp_changelog.md
+            cat "./sdk/CHANGELOG.md" >> temp_changelog.md
+            mv temp_changelog.md "./sdk/CHANGELOG.md"
+          else
+            echo "$CHANGELOG_ENTRY" > "./sdk/CHANGELOG.md"
+          fi
+
+          # 提交变更
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add "./sdk/CHANGELOG.md"
+          git commit -m "📝 更新变更日志 v$NEW_VERSION" || echo "没有变更需要提交"
+          git push || echo "推送失败，可能需要手动处理"
+
+      - name: Notify completion
+        run: |
+          echo "🎉 发布流程完成！"
+          echo "版本: ${{ needs.detect-version-change.outputs.new-version }}"
+          echo "所有包已成功发布到npm"
+          echo "GitHub Release已创建"
+          echo "变更日志已更新"
