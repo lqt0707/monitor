@@ -96,6 +96,7 @@
     "analyze:web": "cross-env ANALYZE=true npm run build:web",
     "analyze:taro": "cross-env ANALYZE=true npm run build:taro",
     "ci": "npm run lint:check && npm run format:check && npm run test",
+    "ci:github": "node scripts/ci-github.cjs",
     "prepublishOnly": "npm run ci && npm run build:prod",
     "publish:all": "npm run publish:main && npm run publish:web && npm run publish:taro && npm run publish:core",
     "version:show": "node scripts/version-manager.js show",

@@ -80,8 +80,13 @@ jobs:
       - name: Build all modules
         run: |
           echo "🚀 开始构建所有模块..."
+          # 使用生产构建，确保所有模块都被构建
           npm run build:prod
           echo "✅ 构建完成"
+
+          # 验证构建产物
+          echo "🔍 验证构建产物..."
+          ls -la dist/ core/dist/ web-core/dist/ taro-core/dist/
         working-directory: ./sdk
 
       - name: Verify build artifacts
@@ -99,7 +104,10 @@ jobs:
         working-directory: ./sdk
 
       - name: Run tests
-        run: npm test
+        run: |
+          echo "🧪 运行测试..."
+          # 使用专门的GitHub Actions CI脚本
+          npm run ci:github
         working-directory: ./sdk
 
   # 发布到npm
@@ -125,7 +133,10 @@ jobs:
         working-directory: ./sdk
 
       - name: Build for production
-        run: npm run build:prod
+        run: |
+          echo "🔨 生产环境构建..."
+          # 直接构建，跳过CI检查
+          npm run build:prod
         working-directory: ./sdk
 
       - name: Publish main package
